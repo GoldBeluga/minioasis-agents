@@ -21,7 +21,7 @@ public sealed class KohaServiceCollectionExtensionsTests
             ["MINIOASIS_KOHA_CLIENT_SECRET"] = "test"
         };
         settings[key] = value;
-        using var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
         var services = new ServiceCollection();
 
         var exception = Assert.Throws<InvalidOperationException>(() => services.AddMinioasisKoha(configuration));
