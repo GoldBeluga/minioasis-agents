@@ -9,6 +9,7 @@
     <File Path=".editorconfig" />
     <File Path=".env" />
     <File Path=".gitignore" />
+    <File Path="AGENTS.md" />
     <File Path="compose.yaml" />
     <File Path="Dockerfile" />
     <File Path="nswag.json" />
