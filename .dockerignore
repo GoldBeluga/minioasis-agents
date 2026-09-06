@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/.git/
+.vs/
+.codex/
+.agents/
+**/.env
+**/.env.*
+**/secrets.json
+**/Properties/launchSettings.json

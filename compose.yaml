@@ -1,0 +1,12 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      MINIOASIS_KOHA_BASE_URL: ${MINIOASIS_KOHA_BASE_URL:?Set MINIOASIS_KOHA_BASE_URL in .env}
+      MINIOASIS_KOHA_CLIENT_ID: ${MINIOASIS_KOHA_CLIENT_ID:?Set MINIOASIS_KOHA_CLIENT_ID in .env}
+      MINIOASIS_KOHA_CLIENT_SECRET: ${MINIOASIS_KOHA_CLIENT_SECRET:?Set MINIOASIS_KOHA_CLIENT_SECRET in .env}

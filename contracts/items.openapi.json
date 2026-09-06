@@ -1,0 +1,442 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Koha REST API (Subset)",
+    "version": "1"
+  },
+  "paths": {
+    "/items/{item_id}": {
+      "get": {
+        "operationId": "getItem",
+        "summary": "Get item",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/item_id_pp"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An item",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/item"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Item not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error. Possible `error_code` attribute values:\n\n* `internal_server_error`\n",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Under maintenance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error"
+                }
+              }
+            }
+          }
+        },
+        "description": "**Required permissions:**\n- `catalogue`: `1`"
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "item_id_pp": {
+        "description": "Internal item identifier",
+        "in": "path",
+        "name": "item_id",
+        "required": true,
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "schemas": {
+      "item": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "integer",
+            "description": "Internal item identifier"
+          },
+          "biblio_id": {
+            "type": "integer",
+            "description": "Internal identifier for the parent bibliographic record"
+          },
+          "external_id": {
+            "description": "The item's barcode",
+            "nullable": true,
+            "type": "string"
+          },
+          "acquisition_date": {
+            "format": "date",
+            "description": "The date the item was acquired",
+            "nullable": true,
+            "type": "string"
+          },
+          "acquisition_source": {
+            "description": "Information about the acquisition source (it is not really a vendor id)",
+            "nullable": true,
+            "type": "string"
+          },
+          "bookable": {
+            "description": "Item level bookability override.",
+            "nullable": true,
+            "type": "boolean"
+          },
+          "effective_bookable": {
+            "type": "boolean",
+            "description": "Allow bookings on this item."
+          },
+          "home_library_id": {
+            "description": "Internal library id for the library the item belongs to",
+            "nullable": true,
+            "type": "string"
+          },
+          "purchase_price": {
+            "description": "Purchase price",
+            "nullable": true,
+            "type": "number"
+          },
+          "replacement_price": {
+            "description": "Cost the library charges to replace the item (e.g. if lost)",
+            "nullable": true,
+            "type": "number"
+          },
+          "replacement_price_date": {
+            "format": "date",
+            "description": "The date the replacement price is effective from",
+            "nullable": true,
+            "type": "string"
+          },
+          "last_checkout_date": {
+            "format": "date",
+            "description": "The date the item was last checked out",
+            "nullable": true,
+            "type": "string"
+          },
+          "last_seen_date": {
+            "format": "date-time",
+            "description": "The date the item barcode was last scanned",
+            "nullable": true,
+            "type": "string"
+          },
+          "not_for_loan_status": {
+            "type": "integer",
+            "description": "Authorized value defining why this item is not for loan"
+          },
+          "effective_not_for_loan_status": {
+            "type": "integer",
+            "description": "Authorized value defining why this item is not for not_for_loan_status"
+          },
+          "damaged_status": {
+            "type": "integer",
+            "description": "Authorized value defining this item as damaged"
+          },
+          "damaged_date": {
+            "description": "The date and time an item was last marked as damaged, NULL if not damaged",
+            "nullable": true,
+            "type": "string"
+          },
+          "lost_status": {
+            "type": "integer",
+            "description": "Authorized value defining this item as lost"
+          },
+          "lost_date": {
+            "format": "date-time",
+            "description": "The date and time an item was last marked as lost, NULL if not lost",
+            "nullable": true,
+            "type": "string"
+          },
+          "withdrawn": {
+            "type": "integer",
+            "description": "Authorized value defining this item as withdrawn"
+          },
+          "withdrawn_date": {
+            "format": "date-time",
+            "description": "The date and time an item was last marked as withdrawn, NULL if not withdrawn",
+            "nullable": true,
+            "type": "string"
+          },
+          "callnumber": {
+            "description": "Call number for this item",
+            "nullable": true,
+            "type": "string"
+          },
+          "coded_location_qualifier": {
+            "description": "Coded location qualifier",
+            "nullable": true,
+            "type": "string"
+          },
+          "checkouts_count": {
+            "description": "Number of times this item has been checked out/issued",
+            "nullable": true,
+            "type": "integer"
+          },
+          "renewals_count": {
+            "description": "Number of times this item has been renewed",
+            "nullable": true,
+            "type": "integer"
+          },
+          "localuse": {
+            "description": "Number of times this item has been recorded for localuse",
+            "nullable": true,
+            "type": "integer"
+          },
+          "holds_count": {
+            "description": "Number of times this item has been placed on hold/reserved",
+            "nullable": true,
+            "type": "integer"
+          },
+          "restricted_status": {
+            "description": "Authorized value defining use restrictions for this item",
+            "nullable": true,
+            "type": "integer"
+          },
+          "public_notes": {
+            "description": "Public notes on this item",
+            "nullable": true,
+            "type": "string"
+          },
+          "internal_notes": {
+            "description": "Non-public notes on this item",
+            "nullable": true,
+            "type": "string"
+          },
+          "holding_library_id": {
+            "description": "Library that is currently in possession item",
+            "nullable": true,
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Date and time this item was last altered"
+          },
+          "location": {
+            "description": "Authorized value for the shelving location for this item",
+            "nullable": true,
+            "type": "string"
+          },
+          "permanent_location": {
+            "description": "Linked to the CART and PROC temporary locations feature, stores the permanent shelving location",
+            "nullable": true,
+            "type": "string"
+          },
+          "checked_out_date": {
+            "format": "date",
+            "description": "Defines if item is checked out (NULL for not checked out, and checkout date for checked out)",
+            "nullable": true,
+            "type": "string"
+          },
+          "call_number_source": {
+            "description": "Classification source used on this item",
+            "nullable": true,
+            "type": "string"
+          },
+          "call_number_sort": {
+            "description": "?",
+            "nullable": true,
+            "type": "string"
+          },
+          "collection_code": {
+            "description": "Authorized value for the collection code associated with this item",
+            "nullable": true,
+            "type": "string"
+          },
+          "materials_notes": {
+            "description": "Materials specified",
+            "nullable": true,
+            "type": "string"
+          },
+          "shelving_control_number": {
+            "description": "Shelving control number",
+            "nullable": true,
+            "type": "number"
+          },
+          "uri": {
+            "description": "URL for the item",
+            "nullable": true,
+            "type": "string"
+          },
+          "item_type_id": {
+            "description": "Itemtype defining the type for this item",
+            "nullable": true,
+            "type": "string"
+          },
+          "effective_item_type_id": {
+            "description": "Effective itemtype defining the type for this item_id",
+            "nullable": true,
+            "type": "string"
+          },
+          "extended_subfields": {
+            "description": "Additional 952 subfields in XML format",
+            "nullable": true,
+            "type": "string"
+          },
+          "serial_issue_number": {
+            "description": "serial enumeration/chronology for the item",
+            "nullable": true,
+            "type": "string"
+          },
+          "copy_number": {
+            "description": "Copy number",
+            "nullable": true,
+            "type": "string"
+          },
+          "inventory_number": {
+            "description": "Inventory number",
+            "nullable": true,
+            "type": "string"
+          },
+          "new_status": {
+            "description": "'new' value, whatever free-text information.",
+            "nullable": true,
+            "type": "string"
+          },
+          "exclude_from_local_holds_priority": {
+            "type": "boolean",
+            "description": "Exclude this item from local holds priority."
+          },
+          "return_claims": {
+            "type": "array",
+            "description": "An array of all return claims associated with this item",
+            "items": {}
+          },
+          "return_claim": {
+            "nullable": true,
+            "type": "object"
+          },
+          "home_library": {
+            "nullable": true,
+            "type": "object"
+          },
+          "holding_library": {
+            "nullable": true,
+            "type": "object"
+          },
+          "cover_image_ids": {
+            "nullable": true,
+            "type": "array",
+            "items": {}
+          },
+          "item_group_item": {
+            "nullable": true,
+            "type": "object"
+          },
+          "serial_item": {
+            "nullable": true,
+            "type": "object"
+          },
+          "biblio": {
+            "nullable": true,
+            "type": "object"
+          },
+          "checkout": {
+            "nullable": true,
+            "type": "object"
+          },
+          "transfer": {
+            "nullable": true,
+            "type": "object"
+          },
+          "first_hold": {
+            "nullable": true,
+            "type": "object"
+          },
+          "recall": {
+            "nullable": true,
+            "type": "object"
+          },
+          "item_type": {
+            "nullable": true,
+            "type": "object"
+          },
+          "in_bundle": {
+            "nullable": true,
+            "type": "boolean"
+          },
+          "bundle_host": {
+            "nullable": true,
+            "type": "object"
+          },
+          "bundle_items_lost_count": {
+            "description": "Number of lost items in the bundle",
+            "nullable": true,
+            "type": "integer"
+          },
+          "bundle_items_not_lost_count": {
+            "description": "Number of items not lost in the bundle",
+            "nullable": true,
+            "type": "integer"
+          },
+          "course_item": {
+            "nullable": true,
+            "type": "object"
+          },
+          "analytics_count": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "_strings": {
+            "description": "A return claims object if one exists that's unresolved",
+            "nullable": true,
+            "type": "object"
+          },
+          "_status": {
+            "description": "The status of the item",
+            "nullable": true,
+            "type": "array",
+            "items": {}
+          }
+        },
+        "additionalProperties": false
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "description": "Error message",
+            "type": "string"
+          },
+          "error_code": {
+            "description": "Error code",
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  }
+}

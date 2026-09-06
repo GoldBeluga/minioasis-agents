@@ -1,0 +1,80 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Koha REST API (Subset)",
+    "version": "1"
+  },
+  "paths": {
+    "/oauth/token": {
+      "post": {
+        "operationId": "tokenOAuth",
+        "summary": "Get access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": { "$ref": "#/components/schemas/oauthTokenRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/oauthTokenResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "items.openapi.json#/components/schemas/error" }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "items.openapi.json#/components/schemas/error" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "oauthTokenRequest": {
+        "type": "object",
+        "required": [ "grant_type" ],
+        "properties": {
+          "grant_type": {
+            "type": "string",
+            "description": "grant type (client_credentials)"
+          },
+          "client_id": {
+            "type": "string",
+            "description": "client id"
+          },
+          "client_secret": {
+            "type": "string",
+            "description": "client secret"
+          }
+        }
+      },
+      "oauthTokenResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": { "type": "string" },
+          "token_type": { "type": "string" },
+          "expires_in": { "type": "integer" }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

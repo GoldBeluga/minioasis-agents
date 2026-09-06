@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/contracts/">
+    <File Path="contracts/oauth.openapi.json" />
+    <File Path="contracts/official_koha_openapi.json" />
+    <File Path="contracts/items.openapi.json" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".dockerignore" />
+    <File Path=".editorconfig" />
+    <File Path=".env" />
+    <File Path=".gitignore" />
+    <File Path="compose.yaml" />
+    <File Path="Dockerfile" />
+    <File Path="nswag.json" />
+  </Folder>
+  <Project Path="Minioasis.Api.Tests/Minioasis.Api.Tests.csproj" />
+  <Project Path="Minioasis.Api/Minioasis.Api.csproj" />
+  <Project Path="Minioasis.Application.Tests/Minioasis.Application.Tests.csproj" />
+  <Project Path="Minioasis.Application/Minioasis.Application.csproj" />
+  <Project Path="Minioasis.Koha.Tests/Minioasis.Koha.Tests.csproj" />
+  <Project Path="Minioasis.Koha/Minioasis.Koha.csproj" Id="31ea8680-ded4-4104-922c-711443ba25cc" />
+</Solution>

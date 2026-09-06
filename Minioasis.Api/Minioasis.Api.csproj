@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PreserveCompilationContext>true</PreserveCompilationContext>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Minioasis.Application/Minioasis.Application.csproj" />
+    <ProjectReference Include="../Minioasis.Koha/Minioasis.Koha.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources/errors.en.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
