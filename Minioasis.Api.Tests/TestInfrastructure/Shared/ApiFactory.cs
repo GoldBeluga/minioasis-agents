@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Minioasis.Api.Tests.TestInfrastructure.Shared;
 
@@ -31,6 +32,7 @@ internal sealed class ApiFactory(
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.ConfigureLogging(logging => logging.ClearProviders());
         if (configureServices is not null)
             builder.ConfigureTestServices(configureServices);
     }

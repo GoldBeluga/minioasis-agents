@@ -1,4 +1,5 @@
 using Minioasis.Koha.Abstractions.Authentication;
+using Minioasis.Koha.Exceptions.Authentication;
 using System.Net;
 using System.Net.Http.Headers;
 
@@ -12,7 +13,7 @@ internal sealed class KohaBearerHandler(IKohaAccessTokenProvider tokens) : Deleg
     {
         request.Headers.Authorization = new AuthenticationHeaderValue(
             "Bearer",
-            await tokens.GetAsync(cancellationToken));
+            await GetTokenAsync(cancellationToken));
 
         var response = await base.SendAsync(request, cancellationToken);
         if (response.StatusCode != HttpStatusCode.Unauthorized || request.Method != HttpMethod.Get)
@@ -32,8 +33,20 @@ internal sealed class KohaBearerHandler(IKohaAccessTokenProvider tokens) : Deleg
 
         retry.Headers.Authorization = new AuthenticationHeaderValue(
             "Bearer",
-            await tokens.GetAsync(cancellationToken));
+            await GetTokenAsync(cancellationToken));
 
         return await base.SendAsync(retry, cancellationToken);
+    }
+
+    private async Task<string> GetTokenAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await tokens.GetAsync(cancellationToken);
+        }
+        catch (OperationCanceledException exception)
+        {
+            throw new KohaTokenAcquisitionCanceledException(exception);
+        }
     }
 }
