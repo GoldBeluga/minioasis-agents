@@ -7,6 +7,8 @@ public sealed class KohaOptions
     internal const string ApiClientName = "Minioasis.Koha";
     internal const string OAuthClientName = "Minioasis.Koha.OAuth";
 
+    internal TimeSpan RequestTimeout { get; init; } = TimeSpan.FromSeconds(10);
+
     public required Uri BaseUrl
     {
         get; init;

@@ -52,8 +52,7 @@ namespace Minioasis.Koha.Generated.Items.Contracts
         /// The date the item was acquired
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("acquisition_date")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(DateFormatConverter))]
-        public System.DateTime? Acquisition_date { get; set; }
+        public System.DateOnly? Acquisition_date { get; set; }
 
         /// <summary>
         /// Information about the acquisition source (it is not really a vendor id)
@@ -95,15 +94,13 @@ namespace Minioasis.Koha.Generated.Items.Contracts
         /// The date the replacement price is effective from
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("replacement_price_date")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(DateFormatConverter))]
-        public System.DateTime? Replacement_price_date { get; set; }
+        public System.DateOnly? Replacement_price_date { get; set; }
 
         /// <summary>
         /// The date the item was last checked out
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("last_checkout_date")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(DateFormatConverter))]
-        public System.DateTime? Last_checkout_date { get; set; }
+        public System.DateOnly? Last_checkout_date { get; set; }
 
         /// <summary>
         /// The date the item barcode was last scanned
@@ -241,8 +238,7 @@ namespace Minioasis.Koha.Generated.Items.Contracts
         /// Defines if item is checked out (NULL for not checked out, and checkout date for checked out)
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("checked_out_date")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(DateFormatConverter))]
-        public System.DateTime? Checked_out_date { get; set; }
+        public System.DateOnly? Checked_out_date { get; set; }
 
         /// <summary>
         /// Classification source used on this item
@@ -464,26 +460,6 @@ namespace Minioasis.Koha.Generated.Items.Contracts
 
             return System.Text.Json.JsonSerializer.Deserialize<Error>(data, options);
 
-        }
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    internal class DateFormatConverter : System.Text.Json.Serialization.JsonConverter<System.DateTime>
-    {
-        public override System.DateTime Read(ref System.Text.Json.Utf8JsonReader reader, System.Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
-        {
-            var dateTime = reader.GetString();
-            if (dateTime == null)
-            {
-                throw new System.Text.Json.JsonException("Unexpected JsonTokenType.Null");
-            }
-
-            return System.DateTime.Parse(dateTime);
-        }
-
-        public override void Write(System.Text.Json.Utf8JsonWriter writer, System.DateTime value, System.Text.Json.JsonSerializerOptions options)
-        {
-            writer.WriteStringValue(value.ToString("yyyy-MM-dd"));
         }
     }
 

@@ -1,7 +1,7 @@
+using Microsoft.Extensions.Logging;
 using Minioasis.Koha.Abstractions.Authentication;
 using Minioasis.Koha.Configuration.Shared;
 using Minioasis.Koha.Exceptions.Authentication;
-using Microsoft.Extensions.Logging;
 using Minioasis.Koha.Generated.OAuth;
 using Minioasis.Koha.Generated.OAuth.Contracts;
 using OAuthServiceException = Minioasis.Koha.Generated.OAuth.Contracts.KohaServiceException;
@@ -74,6 +74,11 @@ internal sealed class KohaAccessTokenProvider(
             catch (HttpRequestException exception)
             {
                 logger.LogError("Koha OAuth endpoint could not be reached");
+                throw new KohaAuthenticationException("Koha OAuth token acquisition failed.", exception);
+            }
+            catch (HttpIOException exception)
+            {
+                logger.LogError("Koha OAuth response ended unexpectedly");
                 throw new KohaAuthenticationException("Koha OAuth token acquisition failed.", exception);
             }
             catch (OperationCanceledException exception)

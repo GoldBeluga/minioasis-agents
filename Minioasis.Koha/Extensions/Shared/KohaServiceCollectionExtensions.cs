@@ -1,11 +1,11 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Minioasis.Application.Abstractions.Item;
 using Minioasis.Koha.Abstractions.Authentication;
 using Minioasis.Koha.Adapters.Item;
 using Minioasis.Koha.Configuration.Shared;
 using Minioasis.Koha.Handlers.Authentication;
 using Minioasis.Koha.Services.Authentication;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
 
 namespace Minioasis.Koha.Extensions.Shared;
 
@@ -18,6 +18,7 @@ public static class KohaServiceCollectionExtensions
         services.AddSingleton(options);
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IKohaAccessTokenProvider, KohaAccessTokenProvider>();
+        services.AddTransient<KohaRequestTimeoutHandler>();
         services.AddTransient<KohaBearerHandler>();
 
         services.AddHttpClient(
@@ -26,7 +27,8 @@ public static class KohaServiceCollectionExtensions
 
         services.AddHttpClient(
                 KohaOptions.ApiClientName,
-                client => client.Timeout = TimeSpan.FromSeconds(10))
+                client => client.Timeout = Timeout.InfiniteTimeSpan)
+            .AddHttpMessageHandler<KohaRequestTimeoutHandler>()
             .AddHttpMessageHandler<KohaBearerHandler>();
 
         services.AddScoped<IItemCatalogGateway, KohaItemCatalogAdapter>();
