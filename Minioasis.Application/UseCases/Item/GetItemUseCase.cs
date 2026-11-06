@@ -19,7 +19,7 @@ internal sealed class GetItemUseCase(IItemCatalogGateway gateway) : IGetItemUseC
             return Failure<ItemDetails>(ItemErrors.InvalidIdentifier);
 
         var id = query.Id.Trim();
-        var result = await gateway.FindByIdAsync(new ExternalItemId(id), cancellationToken);
+        var result = await gateway.FindByIdAsync(new ItemId(id), cancellationToken);
 
         return result.Outcome switch
         {

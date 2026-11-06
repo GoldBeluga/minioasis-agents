@@ -19,7 +19,7 @@ public sealed class KohaAdapterTests
             HttpStatusCode.OK,
             "{\"item_id\":12,\"biblio_id\":34,\"external_id\":\"ABC\",\"callnumber\":\"QA1\"}"));
         var result = await Adapter(handler).FindByIdAsync(
-            new ExternalItemId("12"),
+            new ItemId("12"),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(ItemLookupOutcome.Found, result.Outcome);
@@ -31,7 +31,7 @@ public sealed class KohaAdapterTests
     {
         var handler = new StubHttpMessageHandler((_, _) => throw new InvalidOperationException());
         var result = await Adapter(handler).FindByIdAsync(
-            new ExternalItemId("koha-12"),
+            new ItemId("koha-12"),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(ItemLookupOutcome.InvalidIdentifier, result.Outcome);
@@ -50,7 +50,7 @@ public sealed class KohaAdapterTests
     {
         var handler = new StubHttpMessageHandler((_, _) => TestResponses.Json(status, "{}"));
         var result = await Adapter(handler).FindByIdAsync(
-            new ExternalItemId("12"),
+            new ItemId("12"),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(expected, result.Outcome);
@@ -63,7 +63,7 @@ public sealed class KohaAdapterTests
             Task.FromException<HttpResponseMessage>(
                 new KohaAuthenticationException("OAuth failed")));
         var result = await Adapter(handler).FindByIdAsync(
-            new ExternalItemId("12"),
+            new ItemId("12"),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(ItemLookupOutcome.AuthenticationFailed, result.Outcome);

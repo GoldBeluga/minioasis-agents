@@ -16,7 +16,7 @@ internal sealed class KohaItemCatalogAdapter(
     ILogger<KohaItemCatalogAdapter> logger) : IItemCatalogGateway
 {
     public async Task<ItemLookupResult> FindByIdAsync(
-        ExternalItemId itemId,
+        ItemId itemId,
         CancellationToken cancellationToken = default)
     {
         if (!int.TryParse(itemId.Value, out var kohaId) || kohaId <= 0)

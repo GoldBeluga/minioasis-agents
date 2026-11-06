@@ -6,6 +6,6 @@ namespace Minioasis.Application.Abstractions.Item;
 public interface IItemCatalogGateway
 {
     Task<ItemLookupResult> FindByIdAsync(
-        ExternalItemId itemId,
+        ItemId itemId,
         CancellationToken cancellationToken = default);
 }
