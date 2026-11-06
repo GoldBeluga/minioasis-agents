@@ -93,7 +93,7 @@ public sealed class GetItemUseCaseTests
         }
 
         public Task<ItemLookupResult> FindByIdAsync(
-            ExternalItemId itemId,
+            ItemId itemId,
             CancellationToken cancellationToken = default)
         {
             Calls++;
