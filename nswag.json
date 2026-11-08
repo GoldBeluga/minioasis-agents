@@ -76,7 +76,7 @@
 
       "requiredPropertiesMustBeDefined": true,
 
-      "dateType": "System.DateTime",
+      "dateType": "System.DateOnly",
       "dateTimeType": "System.DateTime",
       "timeType": "System.TimeSpan",
       "timeSpanType": "System.TimeSpan",

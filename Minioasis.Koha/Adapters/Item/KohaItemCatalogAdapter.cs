@@ -1,12 +1,12 @@
+using Microsoft.Extensions.Logging;
 using Minioasis.Application.Abstractions.Item;
 using Minioasis.Application.Models.Item;
 using Minioasis.Application.Results.Item;
 using Minioasis.Koha.Configuration.Shared;
 using Minioasis.Koha.Exceptions.Authentication;
-using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using Minioasis.Koha.Generated.Items;
 using Minioasis.Koha.Generated.Items.Contracts;
+using System.Text.Json;
 
 namespace Minioasis.Koha.Adapters.Item;
 
@@ -16,7 +16,7 @@ internal sealed class KohaItemCatalogAdapter(
     ILogger<KohaItemCatalogAdapter> logger) : IItemCatalogGateway
 {
     public async Task<ItemLookupResult> FindByIdAsync(
-        ExternalItemId itemId,
+        ItemId itemId,
         CancellationToken cancellationToken = default)
     {
         if (!int.TryParse(itemId.Value, out var kohaId) || kohaId <= 0)
@@ -74,6 +74,11 @@ internal sealed class KohaItemCatalogAdapter(
         catch (HttpRequestException exception)
         {
             logger.LogWarning(exception, "Catalog connection failed");
+            return ItemLookupResult.Unavailable();
+        }
+        catch (HttpIOException exception)
+        {
+            logger.LogWarning(exception, "Catalog response ended unexpectedly");
             return ItemLookupResult.Unavailable();
         }
         catch (JsonException exception)
