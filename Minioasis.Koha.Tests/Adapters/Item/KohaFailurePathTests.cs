@@ -21,7 +21,8 @@ public sealed class KohaFailurePathTests
     {
         using var harness = new Harness(
             (_, cancellationToken) => WaitForever(cancellationToken),
-            (_, _) => throw new InvalidOperationException("Item request should not be sent."));
+            (_, _) => throw new InvalidOperationException("Item request should not be sent."),
+            TimeSpan.FromMilliseconds(100));
 
         var result = await harness.Gateway.FindByIdAsync(
             new ItemId("12"),
@@ -166,7 +167,7 @@ public sealed class KohaFailurePathTests
                 BaseUrl = new Uri("https://koha.test/api/v1/"),
                 ClientId = "client-id",
                 ClientSecret = "client-secret",
-                RequestTimeout = requestTimeout ?? TimeSpan.FromMilliseconds(100)
+                RequestTimeout = requestTimeout ?? TimeSpan.FromSeconds(5)
             };
             oauthClient = new HttpClient(new CallbackHandler(oauth))
             {
