@@ -4,6 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PreserveCompilationContext>true</PreserveCompilationContext>
+    <UserSecretsId>4ab23fb8-0434-479a-b15a-46b3c4310df6</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Minioasis.Application/Minioasis.Application.csproj" />
