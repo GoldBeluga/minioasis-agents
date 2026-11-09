@@ -2,12 +2,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Minioasis.Api.Tests.Shared.Factories;
 using Minioasis.Api.Tests.Shared.TestDoubles;
-using Minioasis.Api.Tests.TestInfrastructure.Shared;
-using Minioasis.Application.Abstractions.Item;
-using Minioasis.Application.Errors.Shared;
-using Minioasis.Application.Models.Item;
-using Minioasis.Application.Results.Shared;
+using Minioasis.Application.Items.Abstractions;
+using Minioasis.Application.Items.Requests;
+using Minioasis.Application.Items.Responses;
+using Minioasis.Application.Shared.Errors;
+using Minioasis.Application.Shared.Results;
 using System.Net;
 using System.Net.Http.Json;
 using Xunit;
@@ -17,9 +18,9 @@ namespace Minioasis.Api.Tests.Shared.Handlers;
 public sealed class ApiErrorHandlingTests
 {
     [Theory]
-    [InlineData("catalog.invalid_response", HttpStatusCode.BadGateway)]
-    [InlineData("catalog.unavailable", HttpStatusCode.ServiceUnavailable)]
-    [InlineData("catalog.authentication_failed", HttpStatusCode.InternalServerError)]
+    [InlineData("items.get.invalid_response", HttpStatusCode.BadGateway)]
+    [InlineData("items.get.unavailable", HttpStatusCode.ServiceUnavailable)]
+    [InlineData("items.get.authentication_failed", HttpStatusCode.InternalServerError)]
     [InlineData("system.unexpected", HttpStatusCode.InternalServerError)]
     public async Task Masks_server_failures_and_logs_internal_code_with_response_trace_id(string code, HttpStatusCode status)
     {
@@ -27,7 +28,7 @@ public sealed class ApiErrorHandlingTests
         var error = new ApplicationError(ApplicationErrorDefinitionRegistry.Discover().Definitions[code],
             new Dictionary<string, string> { ["id"] = "private-provider-diagnostic" });
         await using var factory = CreateFactory(
-            (_, _) => Task.FromResult(ApplicationResult<ItemDetails>.Failure(error)), logs);
+            (_, _) => Task.FromResult(ApplicationResult<GetItemResponse>.Failure(error)), logs);
         using var response = await factory.CreateClient().GetAsync("/api/v1/items/12", TestContext.Current.CancellationToken);
 
         var traceId = await AssertInternalError(response, status);
@@ -97,8 +98,8 @@ public sealed class ApiErrorHandlingTests
         return traceId!;
     }
 
-    private static ApiFactory CreateFactory(
-        Func<GetItemQuery, CancellationToken, Task<ApplicationResult<ItemDetails>>> execute,
+    private static ApiWebApplicationFactory CreateFactory(
+        Func<GetItemRequest, CancellationToken, Task<ApplicationResult<GetItemResponse>>> execute,
         RecordingLoggerProvider logs) => new(services =>
         {
             services.RemoveAll<IGetItemUseCase>();
@@ -107,9 +108,9 @@ public sealed class ApiErrorHandlingTests
         });
 
     private sealed class StubGetItemUseCase(
-        Func<GetItemQuery, CancellationToken, Task<ApplicationResult<ItemDetails>>> execute) : IGetItemUseCase
+        Func<GetItemRequest, CancellationToken, Task<ApplicationResult<GetItemResponse>>> execute) : IGetItemUseCase
     {
-        public Task<ApplicationResult<ItemDetails>> ExecuteAsync(GetItemQuery query,
-            CancellationToken cancellationToken = default) => execute(query, cancellationToken);
+        public Task<ApplicationResult<GetItemResponse>> ExecuteAsync(GetItemRequest request,
+            CancellationToken cancellationToken = default) => execute(request, cancellationToken);
     }
 }

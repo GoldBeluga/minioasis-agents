@@ -1,7 +1,7 @@
-using Minioasis.Api.Extensions.Shared;
+using Minioasis.Api.Shared.Extensions;
 using Minioasis.Api.Shared.Factories;
-using Minioasis.Application.Extensions.Shared;
-using Minioasis.Koha.Extensions.Shared;
+using Minioasis.Application.Shared.Extensions;
+using Minioasis.Koha.Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();

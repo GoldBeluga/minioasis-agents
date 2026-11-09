@@ -123,7 +123,7 @@ Pass cancellation through endpoints, use cases, gateway interfaces, token acquis
 
 Test behavior at its owning boundary. Application tests exercise business rules and use-case outcomes through interface fakes. API tests verify HTTP contracts and presentation through an in-process host with service overrides. Koha tests exercise provider translation, authentication, cancellation, and failure handling through `HttpMessageHandler` doubles. Tests must not require a live Koha server or developer credentials. Do not build or extend a fake network server for routine tests.
 
-API tests use the existing `Minioasis.Api.Tests/TestInfrastructure/Shared/ApiFactory.cs`, which supplies dummy Koha configuration and supports test service overrides. Keep host configuration isolated and do not mutate process-wide environment variables in tests. Follow the feature-first organization when adding test support or performing an approved migration.
+API tests use the existing `Minioasis.Api.Tests/Shared/Factories/ApiWebApplicationFactory.cs`, which supplies dummy Koha configuration and supports test service overrides. Keep host configuration isolated and do not mutate process-wide environment variables in tests. Follow the feature-first organization when adding test support or performing an approved migration.
 
 Add focused tests for changed behavior and meaningful failure paths. Preserve supported behavior and public contracts when reorganizing code. Do not fabricate results or claim that a command passed unless it completed successfully.
 
