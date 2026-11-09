@@ -10,10 +10,10 @@ using System.Text.Json;
 
 namespace Minioasis.Koha.Adapters.Item;
 
-internal sealed class KohaItemCatalogAdapter(
+internal sealed class KohaGetItemAdapter(
     IHttpClientFactory httpClientFactory,
     KohaOptions options,
-    ILogger<KohaItemCatalogAdapter> logger) : IItemCatalogGateway
+    ILogger<KohaGetItemAdapter> logger) : IGetItemGateway
 {
     public async Task<ItemLookupResult> FindByIdAsync(
         ItemId itemId,

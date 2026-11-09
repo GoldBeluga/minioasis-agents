@@ -69,7 +69,7 @@ public sealed class KohaAdapterTests
         Assert.Equal(ItemLookupOutcome.AuthenticationFailed, result.Outcome);
     }
 
-    private static KohaItemCatalogAdapter Adapter(HttpMessageHandler handler) =>
+    private static KohaGetItemAdapter Adapter(HttpMessageHandler handler) =>
         new(
             new SingleClientFactory(new HttpClient(handler)),
             new KohaOptions
@@ -78,5 +78,5 @@ public sealed class KohaAdapterTests
                 ClientId = "id",
                 ClientSecret = "secret"
             },
-            NullLogger<KohaItemCatalogAdapter>.Instance);
+            NullLogger<KohaGetItemAdapter>.Instance);
 }

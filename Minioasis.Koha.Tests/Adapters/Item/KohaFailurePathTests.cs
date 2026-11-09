@@ -191,13 +191,13 @@ public sealed class KohaFailurePathTests
                 Timeout = Timeout.InfiniteTimeSpan
             };
             clients.ApiClient = apiClient;
-            Gateway = new KohaItemCatalogAdapter(
+            Gateway = new KohaGetItemAdapter(
                 clients,
                 options,
-                NullLogger<KohaItemCatalogAdapter>.Instance);
+                NullLogger<KohaGetItemAdapter>.Instance);
         }
 
-        public IItemCatalogGateway Gateway
+        public IGetItemGateway Gateway
         {
             get;
         }

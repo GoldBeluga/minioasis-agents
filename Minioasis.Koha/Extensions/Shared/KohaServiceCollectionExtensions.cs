@@ -31,7 +31,7 @@ public static class KohaServiceCollectionExtensions
             .AddHttpMessageHandler<KohaRequestTimeoutHandler>()
             .AddHttpMessageHandler<KohaBearerHandler>();
 
-        services.AddScoped<IItemCatalogGateway, KohaItemCatalogAdapter>();
+        services.AddScoped<IGetItemGateway, KohaGetItemAdapter>();
         return services;
     }
 }
