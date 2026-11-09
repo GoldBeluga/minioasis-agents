@@ -6,21 +6,5 @@
   "items.not_found": {
     "title": "Item not found",
     "detail": "No item was found with identifier {id}."
-  },
-  "catalog.unavailable": {
-    "title": "Internal error",
-    "detail": "Internal error"
-  },
-  "catalog.authentication_failed": {
-    "title": "Internal error",
-    "detail": "Internal error"
-  },
-  "catalog.invalid_response": {
-    "title": "Internal error",
-    "detail": "Internal error"
-  },
-  "system.unexpected": {
-    "title": "Internal error",
-    "detail": "Internal error"
   }
 }

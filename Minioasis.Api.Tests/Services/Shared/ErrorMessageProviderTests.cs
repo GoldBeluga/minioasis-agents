@@ -1,10 +1,10 @@
+using Microsoft.Extensions.DependencyInjection;
 using Minioasis.Api.Extensions.Shared;
 using Minioasis.Api.Services.Shared;
 using Minioasis.Application.Errors.Item;
 using Minioasis.Application.Errors.Shared;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Minioasis.Api.Tests.Services.Shared;
@@ -12,18 +12,34 @@ namespace Minioasis.Api.Tests.Services.Shared;
 public sealed class ErrorMessageProviderTests
 {
     private static readonly ApplicationErrorDefinitionRegistry Registry = ApplicationErrorDefinitionRegistry.Discover();
+    private static readonly string[] ClientErrorCodes = [ItemErrors.InvalidIdentifier.Code, ItemErrors.NotFound.Code];
 
     [Fact]
-    public void Loads_every_defined_message_and_preserves_text()
+    public void Loads_client_messages_without_requiring_internal_messages_and_preserves_text()
     {
         var provider = ErrorMessageProvider.FromJson(ValidResource().ToJsonString(), Registry);
-        foreach (var code in Registry.Definitions.Keys)
+        foreach (var code in ClientErrorCodes)
         {
             Assert.Equal("Title", provider.Get(code).Title);
             Assert.Equal("Detail {id}", provider.Get(code).Detail);
         }
         Assert.Throws<InvalidOperationException>(() => provider.Get("unknown"));
         Assert.Throws<InvalidOperationException>(() => provider.Get(ItemErrors.NotFound.Code.ToUpperInvariant()));
+    }
+
+    [Theory]
+    [InlineData("catalog.unavailable")]
+    [InlineData("catalog.authentication_failed")]
+    [InlineData("catalog.invalid_response")]
+    [InlineData("system.unexpected")]
+    public void Rejects_internal_server_error_messages(string code)
+    {
+        var resource = ValidResource();
+        resource[code] = new JsonObject { ["title"] = "Internal error", ["detail"] = "Internal error" };
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            ErrorMessageProvider.FromJson(resource.ToJsonString(), Registry));
+        Assert.Contains(code, exception.Message);
+        Assert.Contains("must not have an API error message", exception.Message);
     }
 
     [Fact]
@@ -104,7 +120,7 @@ public sealed class ErrorMessageProviderTests
     private static JsonObject ValidResource()
     {
         var resource = new JsonObject();
-        foreach (var code in Registry.Definitions.Keys)
+        foreach (var code in ClientErrorCodes)
         {
             resource[code] = new JsonObject { ["title"] = "Title", ["detail"] = "Detail {id}" };
         }

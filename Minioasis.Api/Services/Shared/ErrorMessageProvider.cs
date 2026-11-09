@@ -22,6 +22,11 @@ internal sealed class ErrorMessageProvider
 
     internal static ErrorMessageProvider FromJson(string json, ApplicationErrorDefinitionRegistry registry)
     {
+        var clientErrorCodes = registry.Definitions
+            .Where(entry => entry.Value.Category is ApplicationErrorCategory.Validation or ApplicationErrorCategory.NotFound)
+            .Select(entry => entry.Key)
+            .ToHashSet(StringComparer.Ordinal);
+
         try
         {
             using var document = JsonDocument.Parse(json);
@@ -46,6 +51,11 @@ internal sealed class ErrorMessageProvider
                     throw new InvalidOperationException($"Unknown error message '{entry.Name}'.");
                 }
 
+                if (!clientErrorCodes.Contains(entry.Name))
+                {
+                    throw new InvalidOperationException($"Internal error '{entry.Name}' must not have an API error message.");
+                }
+
                 ErrorMessageText? text;
                 try
                 {
@@ -64,7 +74,7 @@ internal sealed class ErrorMessageProvider
                 messages.Add(entry.Name, text);
             }
 
-            var missing = registry.Definitions.Keys.Where(code => !messages.ContainsKey(code))
+            var missing = clientErrorCodes.Where(code => !messages.ContainsKey(code))
                 .Order(StringComparer.Ordinal).ToArray();
             if (missing.Length > 0)
             {
