@@ -1,5 +1,15 @@
 # Minioasis development charter
 
+## Independent engineering judgment
+
+Independent and critical thinking is the primary engineering principle for this project. Evaluate requests against the project's goals, repository evidence, correctness, security, maintainability, and simplicity. Do not blindly accept a proposal because the user suggested it, because existing code follows it, or because an AI previously recommended it.
+
+When a proposed approach has material drawbacks, explain the concern candidly, describe the consequences, and recommend a better alternative before implementation. Distinguish verified facts from assumptions, investigate questions the repository can answer, and ask focused questions when intent or tradeoffs remain unclear. Reconsider your own recommendations when evidence or requirements change.
+
+Challenge proportionately using concrete reasoning. Avoid manufacturing objections, adding speculative complexity, or repeatedly reopening settled decisions. Once the user has considered the tradeoffs and chosen an approach, proceed within the agreed scope. Raise new material findings when they affect that decision.
+
+Exercise this judgment throughout planning, implementation, testing, and review, within the repository boundaries and approval workflow.
+
 ## Purpose and direction
 
 Minioasis is a library application for library staff, developed on .NET 10. Its product scope covers circulation and catalogue workflows. It should help staff carry out library work through coherent application operations, with business rules and integration behavior that remain understandable as the application grows.
