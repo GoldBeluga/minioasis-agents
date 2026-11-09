@@ -18,7 +18,9 @@ internal sealed class KohaRequestTimeoutHandler(KohaOptions options) : Delegatin
             try
             {
                 if (response.Content is not null)
+                {
                     await response.Content.LoadIntoBufferAsync(timeout.Token);
+                }
 
                 return response;
             }

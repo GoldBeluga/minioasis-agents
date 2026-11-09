@@ -22,19 +22,21 @@ public sealed class ApiFactoryTests
         var secondItem = new ItemDetails("12", "56", "SECOND", "QA2");
 
         await using (var first = CreateFactory("first", firstItem))
-        await using (var second = CreateFactory("second", secondItem))
         {
-            using var firstClient = first.CreateClient();
-            using var secondClient = second.CreateClient();
-            var results = await Task.WhenAll(
-                firstClient.GetFromJsonAsync<ItemDetails>("/api/v1/items/12", TestContext.Current.CancellationToken),
-                secondClient.GetFromJsonAsync<ItemDetails>("/api/v1/items/12", TestContext.Current.CancellationToken));
+            await using (var second = CreateFactory("second", secondItem))
+            {
+                using var firstClient = first.CreateClient();
+                using var secondClient = second.CreateClient();
+                var results = await Task.WhenAll(
+                    firstClient.GetFromJsonAsync<ItemDetails>("/api/v1/items/12", TestContext.Current.CancellationToken),
+                    secondClient.GetFromJsonAsync<ItemDetails>("/api/v1/items/12", TestContext.Current.CancellationToken));
 
-            Assert.Equal(firstItem, results[0]);
-            Assert.Equal(secondItem, results[1]);
-            AssertSettings(first, "first");
-            AssertSettings(second, "second");
-            Assert.Equal(environmentBefore, keys.Select(Environment.GetEnvironmentVariable).ToArray());
+                Assert.Equal(firstItem, results[0]);
+                Assert.Equal(secondItem, results[1]);
+                AssertSettings(first, "first");
+                AssertSettings(second, "second");
+                Assert.Equal(environmentBefore, keys.Select(Environment.GetEnvironmentVariable).ToArray());
+            }
         }
 
         Assert.Equal(environmentBefore, keys.Select(Environment.GetEnvironmentVariable).ToArray());

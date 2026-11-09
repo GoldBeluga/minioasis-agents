@@ -28,7 +28,9 @@ public sealed class KohaOptions
     {
         var text = Require(configuration, "MINIOASIS_KOHA_BASE_URL");
         if (!Uri.TryCreate(text.TrimEnd('/') + "/", UriKind.Absolute, out var uri))
+        {
             throw new InvalidOperationException("MINIOASIS_KOHA_BASE_URL must be an absolute URL.");
+        }
 
         return new()
         {

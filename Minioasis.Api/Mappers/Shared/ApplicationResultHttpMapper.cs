@@ -12,7 +12,9 @@ internal sealed class ApplicationResultHttpMapper(
     public IResult Map<T>(ApplicationResult<T> result)
     {
         if (result.IsSuccess)
+        {
             return Results.Ok(result.Value);
+        }
 
         var error = result.Error!;
         var status = error.Category switch

@@ -105,7 +105,9 @@ public sealed class ErrorMessageProviderTests
     {
         var resource = new JsonObject();
         foreach (var code in Registry.Definitions.Keys)
+        {
             resource[code] = new JsonObject { ["title"] = "Title", ["detail"] = "Detail {id}" };
+        }
         return resource;
     }
 }

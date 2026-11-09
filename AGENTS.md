@@ -67,6 +67,8 @@ A request carries input to an operation. A response carries its successful data.
 
 Every production or reusable shared-test top-level type belongs in its own file named after the type. Namespaces follow folders. Private nested implementation types and test helpers may remain with their owner. Generated code follows its generator's layout and naming.
 
+Use braces around control-flow statement bodies in handwritten production code and tests, including single-statement `if`, `else`, and loop bodies. Place opening and closing braces on their own lines, following `.editorconfig`. Keep the enclosed statements and their execution order intact when applying this style.
+
 Test folders mirror production feature and role organization. Place feature-specific reusable doubles under `<Feature>/TestDoubles` and cross-feature doubles under `Shared/TestDoubles`. Apply these conventions to new handwritten code. Migrate existing names and layouts through explicitly approved work, keeping references, namespaces, tests, and discovery behavior consistent.
 
 ## Results and error reporting
