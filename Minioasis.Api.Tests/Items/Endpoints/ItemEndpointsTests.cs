@@ -10,6 +10,7 @@ using Minioasis.Application.Shared.Errors;
 using Minioasis.Application.Shared.Results;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Xunit;
 
 namespace Minioasis.Api.Tests.Items.Endpoints;
@@ -23,10 +24,11 @@ public sealed class ItemEndpointsTests
             ApplicationResult<GetItemResponse>.Success(new("12", "34", "ABC", "QA1")));
         using var response = await factory.CreateClient().GetAsync("/api/v1/items/12", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var item = await response.Content.ReadFromJsonAsync<GetItemResponse>(TestContext.Current.CancellationToken);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+        var item = json.Deserialize<GetItemResponse>(new JsonSerializerOptions(JsonSerializerDefaults.Web));
         Assert.Equal(new GetItemResponse("12", "34", "ABC", "QA1"), item);
-        var json = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>(TestContext.Current.CancellationToken);
-        Assert.Equal(new[] { "barcode", "bibliographicRecordId", "callNumber", "id" }, json!.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(new[] { "barcode", "bibliographicRecordId", "callNumber", "id" },
+            json.EnumerateObject().Select(property => property.Name).Order(StringComparer.Ordinal));
     }
 
     [Theory]
