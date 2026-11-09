@@ -8,19 +8,19 @@
     "detail": "No item was found with identifier {id}."
   },
   "catalog.unavailable": {
-    "title": "Catalog unavailable",
-    "detail": "The item catalog is temporarily unavailable."
+    "title": "Internal error",
+    "detail": "Internal error"
   },
   "catalog.authentication_failed": {
-    "title": "Catalog configuration error",
-    "detail": "The server could not authenticate with the item catalog."
+    "title": "Internal error",
+    "detail": "Internal error"
   },
   "catalog.invalid_response": {
-    "title": "Invalid catalog response",
-    "detail": "The item catalog returned a response that could not be processed."
+    "title": "Internal error",
+    "detail": "Internal error"
   },
   "system.unexpected": {
-    "title": "Unexpected error",
-    "detail": "An unexpected server error occurred."
+    "title": "Internal error",
+    "detail": "Internal error"
   }
 }

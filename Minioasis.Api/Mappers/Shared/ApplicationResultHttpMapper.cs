@@ -1,5 +1,6 @@
 using Minioasis.Api.Abstractions.Shared;
 using Minioasis.Api.Services.Shared;
+using Minioasis.Api.Shared.Factories;
 using Minioasis.Application.Errors.Shared;
 using Minioasis.Application.Results.Shared;
 
@@ -7,7 +8,8 @@ namespace Minioasis.Api.Mappers.Shared;
 
 internal sealed class ApplicationResultHttpMapper(
     ErrorMessageProvider messages,
-    IHttpContextAccessor context) : IApplicationResultHttpMapper
+    IHttpContextAccessor context,
+    ILogger<ApplicationResultHttpMapper> logger) : IApplicationResultHttpMapper
 {
     public IResult Map<T>(ApplicationResult<T> result)
     {
@@ -26,6 +28,13 @@ internal sealed class ApplicationResultHttpMapper(
             _ => 500
         };
 
+        var traceId = context.HttpContext?.TraceIdentifier;
+        if (status >= 500)
+        {
+            logger.LogError("Application failure {ErrorCode}. TraceId: {TraceId}", error.Code, traceId);
+            return ApiErrorResultFactory.InternalError(status, traceId);
+        }
+
         var text = messages.Get(error.Code);
         var detail = error.Metadata?.Aggregate(
             text.Detail,
@@ -34,14 +43,6 @@ internal sealed class ApplicationResultHttpMapper(
                 value.Value,
                 StringComparison.Ordinal)) ?? text.Detail;
 
-        return Results.Problem(
-            statusCode: status,
-            title: text.Title,
-            detail: detail,
-            extensions: new Dictionary<string, object?>
-            {
-                ["code"] = error.Code,
-                ["traceId"] = context.HttpContext?.TraceIdentifier
-            });
+        return ApiErrorResultFactory.Create(status, text.Title, detail, error.Code, traceId);
     }
 }

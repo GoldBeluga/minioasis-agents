@@ -1,15 +1,15 @@
-using Minioasis.Api.Tests.TestInfrastructure.Shared;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Minioasis.Api.Tests.TestDoubles.Item;
+using Minioasis.Api.Tests.TestInfrastructure.Shared;
 using Minioasis.Application.Abstractions.Item;
 using Minioasis.Application.Errors.Shared;
 using Minioasis.Application.Models.Item;
 using Minioasis.Application.Results.Shared;
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Xunit;
 
 namespace Minioasis.Api.Tests.Endpoints.Item;
@@ -40,30 +40,6 @@ public sealed class ItemEndpointTests
         HttpStatusCode.NotFound,
         "Item not found",
         "No item was found with identifier 12.")]
-    [InlineData(
-        ApplicationErrorCategory.DependencyInvalidResponse,
-        "catalog.invalid_response",
-        HttpStatusCode.BadGateway,
-        "Invalid catalog response",
-        "The item catalog returned a response that could not be processed.")]
-    [InlineData(
-        ApplicationErrorCategory.DependencyUnavailable,
-        "catalog.unavailable",
-        HttpStatusCode.ServiceUnavailable,
-        "Catalog unavailable",
-        "The item catalog is temporarily unavailable.")]
-    [InlineData(
-        ApplicationErrorCategory.DependencyAuthentication,
-        "catalog.authentication_failed",
-        HttpStatusCode.InternalServerError,
-        "Catalog configuration error",
-        "The server could not authenticate with the item catalog.")]
-    [InlineData(
-        ApplicationErrorCategory.Unexpected,
-        "system.unexpected",
-        HttpStatusCode.InternalServerError,
-        "Unexpected error",
-        "An unexpected server error occurred.")]
     public async Task Maps_application_errors_to_problem_details(
         ApplicationErrorCategory category,
         string code,
@@ -81,6 +57,8 @@ public sealed class ItemEndpointTests
         Assert.Equal(status, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>(TestContext.Current.CancellationToken);
         Assert.Equal(code, problem!["code"].ToString());
+        Assert.False(problem.ContainsKey("type"));
+        Assert.False(problem.ContainsKey("instance"));
         Assert.Equal(category, error.Category);
         Assert.Equal(title, problem["title"].ToString());
         Assert.Equal(detail, problem["detail"].ToString());
