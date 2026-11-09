@@ -12,7 +12,9 @@ builder.Services.AddEndpointModules();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
+}
 
 app.MapEndpointModules();
 app.Run();

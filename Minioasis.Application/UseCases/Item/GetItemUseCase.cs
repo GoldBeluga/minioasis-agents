@@ -16,7 +16,9 @@ internal sealed class GetItemUseCase(IGetItemGateway gateway) : IGetItemUseCase
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(query.Id))
+        {
             return Failure<ItemDetails>(ItemErrors.InvalidIdentifier);
+        }
 
         var id = query.Id.Trim();
         var result = await gateway.FindByIdAsync(new ItemId(id), cancellationToken);

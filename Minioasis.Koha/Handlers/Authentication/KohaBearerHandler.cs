@@ -17,7 +17,9 @@ internal sealed class KohaBearerHandler(IKohaAccessTokenProvider tokens) : Deleg
 
         var response = await base.SendAsync(request, cancellationToken);
         if (response.StatusCode != HttpStatusCode.Unauthorized || request.Method != HttpMethod.Get)
+        {
             return response;
+        }
 
         response.Dispose();
         tokens.Invalidate();
@@ -29,7 +31,9 @@ internal sealed class KohaBearerHandler(IKohaAccessTokenProvider tokens) : Deleg
         };
 
         foreach (var header in request.Headers)
+        {
             retry.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
 
         retry.Headers.Authorization = new AuthenticationHeaderValue(
             "Bearer",

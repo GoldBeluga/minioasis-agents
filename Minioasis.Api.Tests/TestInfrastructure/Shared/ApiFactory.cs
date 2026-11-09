@@ -24,7 +24,9 @@ internal sealed class ApiFactory(
                 ["MINIOASIS_KOHA_CLIENT_SECRET"] = "test"
             });
             if (settings is not null)
+            {
                 configuration.AddInMemoryCollection(settings);
+            }
         });
 
         return base.CreateHost(builder);
@@ -34,6 +36,8 @@ internal sealed class ApiFactory(
     {
         builder.ConfigureLogging(logging => logging.ClearProviders());
         if (configureServices is not null)
+        {
             builder.ConfigureTestServices(configureServices);
+        }
     }
 }

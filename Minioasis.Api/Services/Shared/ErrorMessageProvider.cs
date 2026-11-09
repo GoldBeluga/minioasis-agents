@@ -26,7 +26,9 @@ internal sealed class ErrorMessageProvider
         {
             using var document = JsonDocument.Parse(json);
             if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
                 throw new InvalidOperationException("The English error resource must be a JSON object.");
+            }
 
             var messages = new Dictionary<string, ErrorMessageText>(StringComparer.Ordinal);
             var seen = new HashSet<string>(StringComparer.Ordinal);
@@ -35,10 +37,14 @@ internal sealed class ErrorMessageProvider
             foreach (var entry in document.RootElement.EnumerateObject())
             {
                 if (!seen.Add(entry.Name))
+                {
                     throw new InvalidOperationException($"Duplicate error message '{entry.Name}'.");
+                }
 
                 if (!registry.Definitions.ContainsKey(entry.Name))
+                {
                     throw new InvalidOperationException($"Unknown error message '{entry.Name}'.");
+                }
 
                 ErrorMessageText? text;
                 try
@@ -51,7 +57,9 @@ internal sealed class ErrorMessageProvider
                 }
 
                 if (text is null || string.IsNullOrWhiteSpace(text.Title) || string.IsNullOrWhiteSpace(text.Detail))
+                {
                     throw new InvalidOperationException($"No complete error message for '{entry.Name}'.");
+                }
 
                 messages.Add(entry.Name, text);
             }
@@ -59,7 +67,9 @@ internal sealed class ErrorMessageProvider
             var missing = registry.Definitions.Keys.Where(code => !messages.ContainsKey(code))
                 .Order(StringComparer.Ordinal).ToArray();
             if (missing.Length > 0)
+            {
                 throw new InvalidOperationException($"Missing error messages: {string.Join(", ", missing)}.");
+            }
 
             return new(messages);
         }

@@ -24,21 +24,31 @@ public sealed class ApplicationErrorDefinitionRegistry
             {
                 var source = $"{type.FullName}.{field.Name}";
                 if (field.GetValue(null) is not ApplicationErrorDefinition definition)
+                {
                     throw new InvalidOperationException($"Error definition '{source}' is null.");
+                }
 
                 if (string.IsNullOrWhiteSpace(definition.Code))
+                {
                     throw new InvalidOperationException($"Error definition '{source}' has a blank identifier.");
+                }
 
                 if (!Enum.IsDefined(definition.Category))
+                {
                     throw new InvalidOperationException($"Error definition '{definition.Code}' has an invalid category.");
+                }
 
                 if (!definitions.TryAdd(definition.Code, definition))
+                {
                     throw new InvalidOperationException($"Duplicate error definition '{definition.Code}'.");
+                }
             }
         }
 
         if (definitions.Count == 0)
+        {
             throw new InvalidOperationException("No application error definitions were discovered.");
+        }
 
         return new(definitions);
     }
