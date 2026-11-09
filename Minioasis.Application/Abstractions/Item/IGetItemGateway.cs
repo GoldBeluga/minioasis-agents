@@ -3,7 +3,7 @@ using Minioasis.Application.Results.Item;
 
 namespace Minioasis.Application.Abstractions.Item;
 
-public interface IItemCatalogGateway
+public interface IGetItemGateway
 {
     Task<ItemLookupResult> FindByIdAsync(
         ItemId itemId,

@@ -68,7 +68,7 @@ public sealed class GetItemUseCaseTests
     private static IGetItemUseCase Create(FakeGateway gateway)
     {
         var services = new ServiceCollection()
-            .AddSingleton<IItemCatalogGateway>(gateway)
+            .AddSingleton<IGetItemGateway>(gateway)
             .AddMinioasisApplication()
             .BuildServiceProvider();
 
@@ -85,7 +85,7 @@ public sealed class GetItemUseCaseTests
             _ => ItemLookupResult.InvalidResponse()
         };
 
-    private sealed class FakeGateway(ItemLookupResult result) : IItemCatalogGateway
+    private sealed class FakeGateway(ItemLookupResult result) : IGetItemGateway
     {
         public int Calls
         {

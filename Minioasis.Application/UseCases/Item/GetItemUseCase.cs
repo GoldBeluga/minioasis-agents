@@ -9,7 +9,7 @@ using static Minioasis.Application.Results.Shared.ApplicationResults;
 
 namespace Minioasis.Application.UseCases.Item;
 
-internal sealed class GetItemUseCase(IItemCatalogGateway gateway) : IGetItemUseCase
+internal sealed class GetItemUseCase(IGetItemGateway gateway) : IGetItemUseCase
 {
     public async Task<ApplicationResult<ItemDetails>> ExecuteAsync(
         GetItemQuery query,
