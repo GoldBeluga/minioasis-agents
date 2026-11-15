@@ -12,9 +12,9 @@ Exercise this judgment throughout planning, implementation, testing, and review,
 
 ## Purpose and direction
 
-Minioasis is a library application for library staff, developed on .NET 10. Its product scope covers circulation and catalogue workflows. It should help staff carry out library work through coherent application operations, with business rules and integration behavior that remain understandable as the application grows.
+Minioasis is a library application developed on .NET 10. Its product scope covers circulation and catalogue workflows. It serves two audiences through one API: library staff, through an internal dashboard, and the public, through a web application planned after the staff MVP. It should help staff carry out library work through coherent application operations, with business rules and integration behavior that remain understandable as the application grows.
 
-Koha is authoritative for library records and transactions. Minioasis owns the staff workflows and application-specific rules that use those records and operations. Keep this ownership explicit when designing a capability so that validation, decisions, and updates have a clear home. Additional storage or integration requires an approved design that identifies its purpose and ownership.
+Koha is authoritative for library records and transactions. Minioasis owns the staff workflows and application-specific rules that use those records and operations. Identity providers own sign-in identities; see Audiences, exposure, and identity. Keep this ownership explicit when designing a capability so that validation, decisions, and updates have a clear home. Additional storage or integration requires an approved design that identifies its purpose and ownership.
 
 Develop capabilities incrementally within this direction. Product scope describes the intended application, while source code, contracts, and tests establish what is implemented. Confirm existing behavior before extending it and keep implementation claims accurate. A new circulation or catalogue workflow requires an approved spec under `docs/specs/`; see Planning and approval.
 
@@ -95,6 +95,21 @@ Every server-error response (500, 502, or 503) must use the title `Internal erro
 
 Record the actual internal error code for recognized server failures and the exception for unexpected failures in server logs, together with the same request `traceId` returned to the client. Keep credentials and access tokens out of diagnostic output. Internal error definitions remain available for diagnostics even when the public code is masked. Define the generic server response once in the API response factory; keep the English resource exclusively for client-visible errors and maintain startup validation of that subset.
 
+## Audiences, exposure, and identity
+
+These rules apply to every endpoint. ADR 0003 records why. The mechanics of each identity provider belong in an approved spec. Endpoints that predate these rules, currently the get-item endpoint of spec 001, have no authentication until spec 002 brings them under the staff policy. Add no new endpoint without a policy.
+
+- **Audience.** Every endpoint serves exactly one audience: anonymous, patron, or staff. Its spec states which.
+- **Deny by default.** An endpoint without an explicit authorization policy rejects every caller. Anonymous access is an explicit opt-in that the endpoint's spec approves. Each policy names the token types it accepts, and a token issued for one audience never satisfies another audience's policy. A test enumerates the registered routes and confirms each has its intended policy.
+- **The API verifies identity itself.** Never grant access because of network location, loopback, LAN membership, a proxy, a tunnel, or a claim asserted by a frontend server. Accept only tokens the API verifies cryptographically: the signature against the provider's published keys with a fixed allowlist of asymmetric algorithms, the issuer, the audience, and the expiry. A compromised frontend server must not be able to create an identity.
+- **Exposure.** The API is never exposed to the internet directly. In deployment it listens only where its frontend servers can reach it: on loopback, or behind a firewall that admits only those servers. A frontend reaches the API through server-side code that calls specific endpoints, or through a proxy that forwards only an allowlisted route prefix. Never forward requests to the API wholesale. Staff and public frontends are separate hosts, and staff never sign in through the public frontend.
+- **Staff identity.** For the staff MVP, the staff dashboard is protected by Cloudflare Access, and the API requires a verified Cloudflare Access token for the dashboard's Access application on every staff request. Every verified staff identity has full staff permissions. Supabase is planned as an additional staff identity, to support several staff, and as the public identity provider. Adding it requires an approved spec.
+- **Patron identity.** A patron endpoint derives the patron from the verified token, never from the route, query, or body.
+- **Anonymous endpoints** are read-only and return no patron personal data unless an approved spec says otherwise.
+- **Rejected requests.** Authentication and authorization failures need a public response designed in an approved spec before any endpoint returns them.
+- **Diagnostics.** Never log tokens or credentials. Identity claims such as email addresses are personal data.
+- **Development and tests.** A development identity is allowed only in Development, and startup rejects it in any other environment. Tests sign their own tokens with locally generated keys and never call a live identity provider.
+
 ## Koha contracts and generated code
 
 Base provider operations on the checked-in Koha contract. `contracts/official_koha_openapi.json` is an immutable reference. Never edit it. Derive focused contracts for the required operations from that reference and keep each integration change consistent with its source contract. If a required operation is absent or ambiguous, stop and ask rather than inventing a protocol.
@@ -161,7 +176,7 @@ The agent prepares the pull request, adds the `needs-human` label, explains in t
 
 1. A new spec, or a change to an approved spec's requirements, locked decisions, contract, or scope. Wording corrections are Level 1.
 2. A public contract change not covered by an approved spec: routes, status codes, JSON shapes, Problem Details fields, public error codes, or client-visible error text.
-3. Security-sensitive behavior: staff authentication and authorization, Koha OAuth and token handling, the server-error masking policy, logging that could include personal or secret data, and handling of patron personal data.
+3. Security-sensitive behavior: staff and patron authentication and authorization, endpoint audiences and exposure, Koha OAuth and token handling, the server-error masking policy, logging that could include personal or secret data, and handling of patron personal data.
 4. New infrastructure, storage, external services, providers, or dependencies, and major version upgrades.
 5. Changes to safeguards: this file, `docs/specs/README.md`, `docs/specs/_template/`, `docs/workflow/`, `.claude/` agent and skill definitions, `.github/` workflows, and anything that relaxes a check.
 6. A discovered departure from an approved spec. Stop implementation of the affected requirement, record the deviation in the spec's `plan.md`, and propose the spec change as Level 2.
