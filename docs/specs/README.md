@@ -50,8 +50,8 @@ draft ──► approved ──► verified ──► transferred
 | --- | --- | --- |
 | `draft` | Being discussed and written. | Agent |
 | `approved` | The maintainer accepted the spec. Agents may implement it. | Written as `approved` in the Level 2 spec pull request; it takes effect when the maintainer merges or accepts that pull request |
-| `verified` | Every requirement has a passing test in `verification.md`, all checks pass, and the `ready/<NNN>-<name>` branch exists. | Agent, after an independent verification |
-| `transferred` | The maintainer merged the spec into production and completed manual acceptance. | Agent, recording what the maintainer reports |
+| `verified` | Every requirement has a passing test in `verification.md`, and all checks pass. The agent then creates the `ready/<NNN>-<name>` branch. | Agent, after an independent verification |
+| `transferred` | The maintainer merged the spec into production, and completed manual acceptance or, for a spec that does not write to Koha, chose to skip it. | Agent, recording what the maintainer reports |
 | `rejected` | Not pursued. The reason is recorded in `spec.md`. | Agent, on the maintainer's decision |
 
 The status is the `Status:` line at the top of `spec.md`. `docs/ROADMAP.md` and `docs/STATE.md` mirror it.

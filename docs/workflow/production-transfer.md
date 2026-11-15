@@ -69,12 +69,12 @@ Then apply the branch protection settings below, and tell an agent that spec 001
 - [ ] **Spec:** the behavior matches the approved `docs/specs/<NNN>/spec.md`.
 - [ ] **Verification:** in `verification.md`, every requirement has a passing test, and the Given/When/Then column reads correctly.
 - [ ] **Test spot-check:** open one or two test bodies and confirm they assert what their row claims.
-- [ ] **Manual acceptance:** walk through the scenarios in the "Manual acceptance" section against a test Koha, and note what you observed. Required for any spec that writes to Koha.
+- [ ] **Manual acceptance:** walk through the scenarios in the "Manual acceptance" section against a test Koha, and note what you observed. Required for any spec that writes to Koha. For a spec that only reads from Koha you may skip it; tell the agent you skipped it.
 - [ ] **Files:** nothing outside what the spec's `plan.md` lists.
 - [ ] **Security:** authentication, logging, configuration, `Dockerfile`, `compose.yaml`; no secrets or patron data in logs.
 - [ ] **Public contract:** routes and `Minioasis.Api/Resources/errors.en.json`.
 - [ ] **Dependencies:** `*.csproj` package references and `dotnet-tools.json`.
-- [ ] **Safeguards:** every change to `AGENTS.md`, `docs/specs/README.md`, `docs/specs/_template/`, `.claude/`, or `.github/` is one you accepted. GitHub cannot enforce this rule, so this check is the backstop.
+- [ ] **Safeguards:** every change to `AGENTS.md`, `docs/specs/README.md`, `docs/specs/_template/`, `docs/workflow/`, `.claude/`, or `.github/` is one you accepted. GitHub cannot enforce this rule, so this check is the backstop.
 - [ ] **CI:** passing on the pull request.
 
 Style, naming, and layering are checked by CI and the reviewer agent. You do not need to review them.
@@ -108,6 +108,8 @@ Set these in GitHub under **Settings → Rules → Rulesets**, or under **Branch
 - Block force pushes and branch deletion, so a transfer point cannot change after it is created.
 
 ### `minioasis` — `master`
+
+GitHub's free plan offers branch protection only on public repositories. If `minioasis` is private on a free plan, either upgrade the plan, make the repository public, or go without protection and always merge through a pull request with a merge commit.
 
 - Require a pull request before merging, with **0** required approvals. You are the only reviewer, and merging is your approval.
 - Require status checks to pass: the same CI workflow runs here, because it is transferred with the code.
