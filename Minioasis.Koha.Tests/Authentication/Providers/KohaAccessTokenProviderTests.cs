@@ -111,11 +111,18 @@ public sealed class KohaAccessTokenProviderTests
     [Fact]
     public async Task Concurrent_callers_share_one_refresh()
     {
-        var handler = new StubHttpMessageHandler((_, _) => HttpResponseMessageFactory.CreateJsonAsync(HttpStatusCode.OK, ValidToken()));
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var handler = new StubHttpMessageHandler(async (_, cancellationToken) =>
+        {
+            await release.Task.WaitAsync(cancellationToken);
+            return await HttpResponseMessageFactory.CreateJsonAsync(HttpStatusCode.OK, ValidToken());
+        });
         using var provider = Create(handler);
 
         var calls = Enumerable.Range(0, 20)
-            .Select(_ => provider.GetAsync(TestContext.Current.CancellationToken));
+            .Select(_ => provider.GetAsync(TestContext.Current.CancellationToken))
+            .ToArray();
+        release.SetResult();
         var tokens = await Task.WhenAll(calls);
 
         Assert.All(tokens, token => Assert.Equal("token-1", token));
