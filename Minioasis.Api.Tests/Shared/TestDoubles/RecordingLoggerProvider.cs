@@ -5,7 +5,7 @@ namespace Minioasis.Api.Tests.Shared.TestDoubles;
 
 internal sealed class RecordingLoggerProvider : ILoggerProvider
 {
-    public ConcurrentQueue<(string Message, Exception? Exception)> Entries { get; } = new();
+    public ConcurrentQueue<(string Message, Exception? Exception, LogLevel Level)> Entries { get; } = new();
 
     public ILogger CreateLogger(string categoryName) => new RecordingLogger(this);
 
@@ -20,6 +20,6 @@ internal sealed class RecordingLoggerProvider : ILoggerProvider
         public bool IsEnabled(LogLevel logLevel) => true;
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
-            Func<TState, Exception?, string> formatter) => owner.Entries.Enqueue((formatter(state, exception), exception));
+            Func<TState, Exception?, string> formatter) => owner.Entries.Enqueue((formatter(state, exception), exception, logLevel));
     }
 }

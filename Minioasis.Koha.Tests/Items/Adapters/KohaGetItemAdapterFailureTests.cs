@@ -25,9 +25,9 @@ public sealed class KohaGetItemAdapterFailureTests
             (_, _) => throw new InvalidOperationException("Item request should not be sent."),
             TimeSpan.FromMilliseconds(100));
 
-        var result = await harness.Gateway.GetItemAsync(
-            new ItemId("12"),
-            TestContext.Current.CancellationToken);
+        var result = await harness.Gateway
+            .GetItemAsync(new ItemId("12"), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(GetItemOutcome.AuthenticationFailed, result.Outcome);
     }
@@ -40,7 +40,9 @@ public sealed class KohaGetItemAdapterFailureTests
             (_, _) => throw new InvalidOperationException("Item request should not be sent."),
             TimeSpan.FromSeconds(5));
         using var cancellation = new CancellationTokenSource();
-        var pending = harness.Gateway.GetItemAsync(new ItemId("12"), cancellation.Token);
+        var pending = harness.Gateway
+            .GetItemAsync(new ItemId("12"), cancellation.Token)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         cancellation.Cancel();
 
@@ -64,9 +66,9 @@ public sealed class KohaGetItemAdapterFailureTests
             TimeSpan.FromMilliseconds(500));
         var elapsed = Stopwatch.StartNew();
 
-        var result = await harness.Gateway.GetItemAsync(
-            new ItemId("12"),
-            TestContext.Current.CancellationToken);
+        var result = await harness.Gateway
+            .GetItemAsync(new ItemId("12"), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         elapsed.Stop();
         Assert.Equal(GetItemOutcome.Unavailable, result.Outcome);

@@ -93,7 +93,13 @@ public sealed class KohaGetItemAdapterTests
     [InlineData(HttpStatusCode.InternalServerError, GetItemOutcome.Unavailable)]
     [InlineData(HttpStatusCode.BadGateway, GetItemOutcome.Unavailable)]
     [InlineData(HttpStatusCode.ServiceUnavailable, GetItemOutcome.Unavailable)]
+    [InlineData(HttpStatusCode.GatewayTimeout, GetItemOutcome.Unavailable)]
+    [InlineData((HttpStatusCode)599, GetItemOutcome.Unavailable)]
     [InlineData(HttpStatusCode.BadRequest, GetItemOutcome.InvalidResponse)]
+    [InlineData(HttpStatusCode.MethodNotAllowed, GetItemOutcome.InvalidResponse)]
+    [InlineData(HttpStatusCode.Conflict, GetItemOutcome.InvalidResponse)]
+    [InlineData(HttpStatusCode.Gone, GetItemOutcome.InvalidResponse)]
+    [InlineData(HttpStatusCode.UnprocessableEntity, GetItemOutcome.InvalidResponse)]
     public async Task Translates_item_http_failures(
         HttpStatusCode status,
         GetItemOutcome expected)
