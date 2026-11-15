@@ -75,6 +75,16 @@ public sealed class GetItemUseCaseTests
         Assert.Equal("12", result.Error!.Metadata!["id"]);
     }
 
+    [Fact]
+    public async Task Passes_caller_cancellation_token_to_gateway()
+    {
+        var gateway = new FakeGetItemGateway(GetItemGatewayResult.NotFound());
+        var useCase = Create(gateway);
+        using var cancellation = new CancellationTokenSource();
+        await useCase.ExecuteAsync(new GetItemRequest("12"), cancellation.Token);
+        Assert.Equal(cancellation.Token, gateway.LastCancellationToken);
+    }
+
     private static IGetItemUseCase Create(GetItemGatewayResult result) => Create(new FakeGetItemGateway(result));
 
     private static IGetItemUseCase Create(FakeGetItemGateway gateway)
@@ -109,12 +119,18 @@ public sealed class GetItemUseCaseTests
             get; private set;
         }
 
+        public CancellationToken LastCancellationToken
+        {
+            get; private set;
+        }
+
         public Task<GetItemGatewayResult> GetItemAsync(
             ItemId itemId,
             CancellationToken cancellationToken = default)
         {
             Calls++;
             LastItemId = itemId;
+            LastCancellationToken = cancellationToken;
             return Task.FromResult(result);
         }
     }

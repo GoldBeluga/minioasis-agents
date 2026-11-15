@@ -74,6 +74,42 @@ public sealed class KohaGetItemAdapterFailureTests
     }
 
     [Fact]
+    public async Task Unanswered_item_request_is_unavailable_at_the_deadline()
+    {
+        using var harness = new GetItemAdapterHarness(
+            (_, _) => Task.FromResult(Token()),
+            (_, cancellationToken) => WaitForever(cancellationToken),
+            TimeSpan.FromMilliseconds(300));
+
+        var result = await harness.Gateway
+            .GetItemAsync(new ItemId("12"), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.Equal(GetItemOutcome.Unavailable, result.Outcome);
+    }
+
+    [Fact]
+    public async Task Caller_cancellation_during_item_request_is_propagated()
+    {
+        var itemRequested = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var harness = new GetItemAdapterHarness(
+            (_, _) => Task.FromResult(Token()),
+            (_, cancellationToken) =>
+            {
+                itemRequested.SetResult();
+                return WaitForever(cancellationToken);
+            });
+        using var cancellation = new CancellationTokenSource();
+        var pending = harness.Gateway.GetItemAsync(new ItemId("12"), cancellation.Token);
+        await itemRequested.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        cancellation.Cancel();
+
+        var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+        Assert.Equal(cancellation.Token, exception.CancellationToken);
+    }
+
+    [Fact]
     public async Task Item_response_disconnection_is_unavailable()
     {
         using var harness = new GetItemAdapterHarness(
