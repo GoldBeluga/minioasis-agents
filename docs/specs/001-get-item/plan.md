@@ -65,7 +65,7 @@ See [verification.md](verification.md).
 
 ## Follow-up pull requests (Level 1)
 
-1. ~~Add the missing tests listed as gaps in `verification.md`, and strengthen the weak one.~~ Done in `ai/spec/001-test-gaps`.
+1. ~~Add the missing tests listed as gaps in `verification.md`, and strengthen the weak one.~~ Done in pull request #11.
 2. Record "Seen failing" for every row, by breaking each behavior on purpose, watching its test fail, and restoring it.
 3. Have an agent that did not write the tests verify the spec.
 4. When there are no gaps left, mark the spec `verified` and create the branch `ready/001-get-item`.

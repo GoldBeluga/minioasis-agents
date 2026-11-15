@@ -1,7 +1,7 @@
 # 001 — Get item: verification
 
 - **Spec:** [spec.md](spec.md)
-- **Verified at commit:** not yet; coverage reviewed against `7122045` on 2026-11-15; gaps closed on `ai/spec/001-test-gaps` on 2026-11-15
+- **Verified at commit:** not yet; coverage reviewed against `7122045` on 2026-11-15; gaps closed by pull request #11 on 2026-11-15
 - **Transfer branch:** not yet
 
 ## Requirement coverage
@@ -77,7 +77,7 @@ Writing this table found 2 more gaps and 1 weak test, in addition to the 3 above
 
 ## Checks
 
-Run on `ai/spec/001-test-gaps` (based on `e850a93`), on 2026-11-15:
+Run for pull request #11 (based on `e850a93`), on 2026-11-15:
 
 | Command | Result |
 | --- | --- |
