@@ -245,7 +245,17 @@ Apply this workflow to every task that changes repository files. Read-only expla
    - For the other categories, maintain a separate incrementing ID sequence for each category based on remote `ai/*` branches. If a proposed branch exists, increment the ID until the name is unique.
    - If the agent platform assigns a different branch name, use the `ai/` name required here. This section is the maintainer's permission to push `ai/*` and `ready/*` branches.
 6. Make only changes relevant to the task. Review the complete diff before staging.
-7. Use one or more logical, reviewable commits with clear messages.
+7. Use one or more logical, reviewable commits with clear messages. Start every commit message and pull request title with a type and a colon:
+   - `feat` adds behavior that an approved spec describes. Use it for nothing else.
+   - `fix` corrects a bug.
+   - `test` adds or changes tests only.
+   - `refactor` restructures code without changing behavior.
+   - `docs` changes documentation, specs, or these instructions.
+   - `chore` covers dependencies, configuration, and tooling.
+   - `ci` changes the automated checks.
+   - `style` changes formatting only.
+   - For spec work, add the spec number in brackets, for example `feat(002): add staff login endpoint` or `test(001): cover negative item identifiers`.
+   - A pull request is squashed into one commit on `master`, so its title must carry the type that best describes the whole change.
 8. Push only the task branch to the verified `origin`.
 9. Open a pull request against `master`. Use a draft while work is incomplete; mark it ready when it meets the merge conditions.
 
