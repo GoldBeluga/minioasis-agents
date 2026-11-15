@@ -8,11 +8,11 @@ This file holds only what GitHub and Git cannot show. Work in progress is the li
 
 ## Current spec
 
-- **001 Get item:** `approved`. Five test gaps and one weak test to fix before it is verified; see `docs/specs/001-get-item/verification.md`.
+- **001 Get item:** `approved`. All test gaps are closed. Before it is verified, "Seen failing" must be recorded for the older tests and an independent agent must verify it; see `docs/specs/001-get-item/verification.md`.
 
 ## Next
 
-- Close the 001 gaps, record "Seen failing" for its tests, have it verified independently, and create `ready/001-get-item`.
+- Record "Seen failing" for the remaining 001 tests, have it verified independently, and create `ready/001-get-item`.
 - Draft spec 002 (staff authentication design) for the maintainer.
 
 ## Recent decisions
