@@ -40,7 +40,54 @@ public sealed class KohaGetItemAdapterTests
     }
 
     [Theory]
+    [InlineData("0")]
+    [InlineData("-5")]
+    [InlineData("2147483648")]
+    public async Task Rejects_non_positive_or_out_of_range_identifier_without_network(string identifier)
+    {
+        var handler = new StubHttpMessageHandler((_, _) => throw new InvalidOperationException());
+        var result = await Adapter(handler).GetItemAsync(
+            new ItemId(identifier),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(GetItemOutcome.InvalidIdentifier, result.Outcome);
+        Assert.Equal(0, handler.Calls);
+    }
+
+    [Fact]
+    public async Task Maps_missing_barcode_and_call_number_to_null()
+    {
+        var handler = new StubHttpMessageHandler((_, _) => HttpResponseMessageFactory.CreateJsonAsync(
+            HttpStatusCode.OK,
+            "{\"item_id\":12,\"biblio_id\":34,\"external_id\":null}"));
+        var result = await Adapter(handler).GetItemAsync(
+            new ItemId("12"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(GetItemOutcome.Found, result.Outcome);
+        Assert.Equal(new GetItemResponse("12", "34", null, null), result.Response);
+    }
+
+    [Theory]
+    [InlineData("{\"item_id\":0,\"biblio_id\":34}")]
+    [InlineData("{\"item_id\":-1,\"biblio_id\":34}")]
+    [InlineData("{\"item_id\":12,\"biblio_id\":0}")]
+    [InlineData("{\"item_id\":12,\"biblio_id\":-3}")]
+    public async Task Non_positive_identifiers_in_koha_item_are_an_invalid_response(string json)
+    {
+        var handler = new StubHttpMessageHandler((_, _) => HttpResponseMessageFactory.CreateJsonAsync(
+            HttpStatusCode.OK,
+            json));
+        var result = await Adapter(handler).GetItemAsync(
+            new ItemId("12"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(GetItemOutcome.InvalidResponse, result.Outcome);
+    }
+
+    [Theory]
     [InlineData(HttpStatusCode.NotFound, GetItemOutcome.NotFound)]
+    [InlineData(HttpStatusCode.Unauthorized, GetItemOutcome.AuthenticationFailed)]
     [InlineData(HttpStatusCode.Forbidden, GetItemOutcome.AuthenticationFailed)]
     [InlineData(HttpStatusCode.TooManyRequests, GetItemOutcome.Unavailable)]
     [InlineData(HttpStatusCode.BadGateway, GetItemOutcome.Unavailable)]

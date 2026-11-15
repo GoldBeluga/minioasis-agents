@@ -88,6 +88,35 @@ public sealed class KohaGetItemAdapterFailureTests
     }
 
     [Fact]
+    public async Task Koha_401_that_persists_after_retry_is_an_authentication_failure()
+    {
+        var oauthCalls = 0;
+        var itemCalls = 0;
+        using var harness = new GetItemAdapterHarness(
+            (_, _) =>
+            {
+                oauthCalls++;
+                return Task.FromResult(Token());
+            },
+            (_, _) =>
+            {
+                itemCalls++;
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized)
+                {
+                    Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json")
+                });
+            });
+
+        var result = await harness.Gateway.GetItemAsync(
+            new ItemId("12"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(GetItemOutcome.AuthenticationFailed, result.Outcome);
+        Assert.Equal(2, itemCalls);
+        Assert.Equal(2, oauthCalls);
+    }
+
+    [Fact]
     public async Task OAuth_response_disconnection_is_an_authentication_failure()
     {
         using var harness = new GetItemAdapterHarness(
