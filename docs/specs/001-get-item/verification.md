@@ -1,7 +1,7 @@
 # 001 — Get item: verification
 
 - **Spec:** [spec.md](spec.md)
-- **Verified at commit:** not yet; coverage reviewed against `7122045` on 2026-11-15; gaps closed by pull request #11 on 2026-11-15; "Seen failing" recorded for every row on 2026-11-15, against `0520881`
+- **Verified at commit:** not yet; coverage reviewed against `7122045` on 2026-11-15; gaps closed by pull request #11 on 2026-11-15; "Seen failing" recorded for every row on 2026-11-15, against `0520881`; tests added after the first independent verification on 2026-11-15
 - **Transfer branch:** not yet
 
 ## Requirement coverage
@@ -15,6 +15,7 @@ Test paths are shortened. `Api` means `Minioasis.Api.Tests`, and the same for th
 | R1 | Koha returns an item with id 12, biblio 34, barcode ABC, call number QA1 → adapter returns those four values | `Koha::KohaGetItemAdapterTests::Maps_generated_item_to_get_item_response` | yes, S01 | ✅ pass |
 | R1 | Gateway finds an item → use case returns it unchanged | `Application::GetItemUseCaseTests::Returns_get_item_response_when_gateway_finds_item` | yes, S02 | ✅ pass |
 | R1 | Use case succeeds → API returns 200 with exactly the fields `barcode`, `bibliographicRecordId`, `callNumber`, `id` | `Api::ItemEndpointsTests::Returns_item_json_from_application_use_case` | yes, S03 | ✅ pass |
+| R1, R3 | Production composition (real use case, adapter, handlers and dependency injection; only the network below the Koha HTTP clients is fake): `GET /api/v1/items/%2077%20` → 200 with id 77, Koha receives `/api/v1/items/77` with the bearer token; `GET /api/v1/items/abc` → 400 `items.invalid_identifier` with no Koha request | `Api::ItemEndpointsCompositionTests` (2 tests) | yes, V06 (route identifier ignored) and W1 (gateway registration removed) | ✅ pass |
 | R2 | Identifier `"  "` → `items.invalid_identifier`, and the gateway is called 0 times | `Application::GetItemUseCaseTests::Rejects_blank_identifier_without_calling_gateway` | yes, S04 | ✅ pass |
 | R2, R3, R4 | Validation error → 400 with the correct title, detail, code, `traceId`, `application/problem+json`, and no `type` or `instance` | `Api::ItemEndpointsTests::Maps_application_errors_to_problem_details` (validation row) | yes, S05 | ✅ pass |
 | R3 | Identifier `"koha-12"` → invalid identifier, and 0 network calls | `Koha::KohaGetItemAdapterTests::Rejects_non_numeric_identifier_without_network` | yes, S06 | ✅ pass |
@@ -24,6 +25,9 @@ Test paths are shortened. `Api` means `Minioasis.Api.Tests`, and the same for th
 | R5 | Not found → `items.not_found` / NotFound | `Application::GetItemUseCaseTests::Translates_gateway_outcomes` (NotFound row) | yes, S09 | ✅ pass |
 | R5 | Not found → 404, detail "No item was found with identifier 12." | `Api::ItemEndpointsTests::Maps_application_errors_to_problem_details` (not-found row) | yes, S10 | ✅ pass |
 | R6 | Koha 429 and 502 → unavailable | `Koha::KohaGetItemAdapterTests::Translates_item_http_failures` (429 and 502 rows) | yes, S11 | ✅ pass |
+| R6 | Koha 500 and 503 → unavailable | `Koha::KohaGetItemAdapterTests::Translates_item_http_failures` (500 and 503 rows) | yes, X2 | ✅ pass |
+| R6 | Item request fails to connect (`HttpRequestException`) → unavailable | `Koha::KohaGetItemAdapterTests::Connection_failure_is_unavailable` | yes, V19 | ✅ pass |
+| R6, R10 | Item request never answers → unavailable at the deadline (300 ms in the test) | `Koha::KohaGetItemAdapterFailureTests::Unanswered_item_request_is_unavailable_at_the_deadline` | yes, V24 | ✅ pass |
 | R6 | Item response stream breaks → unavailable | `Koha::KohaGetItemAdapterFailureTests::Item_response_disconnection_is_unavailable` | yes, S12b (S12 had no effect; see note 1) | ✅ pass |
 | R6 | Unavailable → `items.get.unavailable` | `Application::GetItemUseCaseTests::Translates_gateway_outcomes` (Unavailable row) | yes, S13 | ✅ pass |
 | R6 | `items.get.unavailable` → 503 masked | `Api::ApiErrorHandlingTests::Masks_server_failures_and_logs_internal_code_with_response_trace_id` | yes, S14 | ✅ pass |
@@ -37,19 +41,26 @@ Test paths are shortened. `Api` means `Minioasis.Api.Tests`, and the same for th
 | R7 | `items.get.authentication_failed` → 500 masked | `Api::ApiErrorHandlingTests::Masks_server_failures_and_logs_internal_code_with_response_trace_id` | yes, S22 | ✅ pass |
 | R8 | Koha 400 → invalid response | `Koha::KohaGetItemAdapterTests::Translates_item_http_failures` (400 row) | yes, S23 | ✅ pass |
 | R8 | Item with an unparseable date → invalid response | `Koha::KohaGetItemAdapterFailureTests::Invalid_date_is_an_invalid_response` | yes, S23 (S24 had no effect; see note 1) | ✅ pass |
+| R8 | Koha 200 with body `null` or `{` → invalid response | `Koha::KohaGetItemAdapterTests::Unusable_success_body_is_an_invalid_response` | yes, X3 | ✅ pass |
 | R8 | Koha 200 with `item_id` 0 or -1, or `biblio_id` 0 or -3 → invalid response | `Koha::KohaGetItemAdapterTests::Non_positive_identifiers_in_koha_item_are_an_invalid_response` | yes: removing the identifier check made all four rows fail with `Found` | ✅ pass |
 | R8 | `items.get.invalid_response` → 502 masked | `Api::ApiErrorHandlingTests::Masks_server_failures_and_logs_internal_code_with_response_trace_id` | yes, S25 | ✅ pass |
 | R9 | Each server-failure code → masked body, and the internal code is logged with the response `traceId` | `Api::ApiErrorHandlingTests::Masks_server_failures_and_logs_internal_code_with_response_trace_id` | yes: S26 (internal code not logged), S27 (body gains a `detail`) | ✅ pass |
 | R9 | Unhandled exception, in Development and in Production → masked 500, and the exception is logged with `traceId` | `Api::ApiErrorHandlingTests::Masks_unhandled_exceptions_and_logs_exception_with_response_trace_id` | yes: S27 (body gains a `detail`), S28 (exception not logged) | ✅ pass |
 | R10 | 300 ms OAuth plus a stalled body under a 500 ms deadline → unavailable in under 700 ms | `Koha::KohaGetItemAdapterFailureTests::Total_deadline_includes_oauth_and_item_response_body` | yes, S29 | ✅ pass |
+| R10 | The registered deadline is 10 seconds | `Koha::KohaServiceCollectionExtensionsTests::Registered_koha_deadline_is_ten_seconds` | yes, V25 | ✅ pass |
+| R10 | The API client registered by `AddMinioasisKoha` puts token acquisition inside the deadline: OAuth never answers → authentication failure in under 5 s with a 300 ms deadline | `Koha::KohaServiceCollectionExtensionsTests::Registered_api_client_bounds_token_acquisition_by_the_deadline` | yes, V26 (handler order swapped) | ✅ pass |
 | R11 | First 401 → fresh token, then a single retry | `Koha::KohaBearerHandlerTests::Retries_get_once_with_fresh_token_after_401` | yes, S30 | ✅ pass |
 | R11 | Second 401 → no further retry | `Koha::KohaBearerHandlerTests::Does_not_retry_a_second_401` | yes, S31 | ✅ pass |
 | R11 | Non-GET 401 → no retry | `Koha::KohaBearerHandlerTests::Does_not_retry_non_get_request` | yes, S32 | ✅ pass |
 | R12 | Client cancels during OAuth → the cancellation propagates with the caller's token | `Koha::KohaGetItemAdapterFailureTests::Caller_cancellation_during_oauth_is_propagated` | yes, S33 | ✅ pass |
+| R12 | Client cancels during the item request → the cancellation propagates with the caller's token | `Koha::KohaGetItemAdapterFailureTests::Caller_cancellation_during_item_request_is_propagated` | yes, X1 | ✅ pass |
+| R12 | The use case passes the caller's cancellation token to the gateway | `Application::GetItemUseCaseTests::Passes_caller_cancellation_token_to_gateway` | yes, V33 | ✅ pass |
 | R12 | Client aborts → nothing is logged as an internal failure | `Api::ApiErrorHandlingTests::Propagates_caller_cancellation_without_logging_an_internal_failure` | yes, S34: the test hung and was aborted (see note 2) | ✅ pass |
 | R13 | Date `2026-09-06` under culture `ar-SA` → found | `Koha::KohaGetItemAdapterFailureTests::Iso_date_is_parsed_independently_of_current_culture` | yes, S35 | ✅ pass |
 
 **Gaps: 0.** Every requirement row has a passing test that was seen to fail when its behavior was broken.
+
+The first independent verification found seven code changes that no test caught: V06, W1, V19, V24, V25, V26 and V33. The rows marked with those identifiers, and the X rows, were added to close them.
 
 **R11** is also proven end to end by `Koha::KohaGetItemAdapterFailureTests::Koha_401_that_persists_after_retry_is_an_authentication_failure`: through the real bearer handler and token provider, it asserts 2 item requests and 2 token acquisitions. Seen failing: yes, S30 (no retry) and S31 (a third attempt).
 
@@ -111,6 +122,16 @@ Each change was applied alone, only the named tests were run, and the file was r
 | S34 | `ItemEndpoints.cs` | Use case given `CancellationToken.None` | `Propagates_caller_cancellation_...`: hung and was aborted by `--blame-hang-timeout 60s` (note 2) |
 | S35 | new temporary file in `Minioasis.Koha/Items/Adapters/` | NSwag's `UpdateJsonSerializerSettings` hook adds a `DateOnly` converter that uses the current culture | `Iso_date_is_parsed_independently_of_current_culture` (`FormatException` under `ar-SA`) |
 | S36 | `KohaAccessTokenProvider.cs` | Second cache check inside the lock removed | `Concurrent_callers_share_one_refresh` (expected 1 token request, got 20) |
+| V06 | `ItemEndpoints.cs` | Route identifier ignored; always asks for `"12"` | `ItemEndpointsCompositionTests` (both tests) |
+| W1 | `KohaServiceCollectionExtensions.cs` | `IGetItemGateway` registration removed | `ItemEndpointsCompositionTests` (both tests) |
+| V19 | `KohaGetItemAdapter.cs` | `HttpRequestException` caught only when it has an inner exception | `Connection_failure_is_unavailable` |
+| V24 | `KohaBearerHandler.cs` | Item request sent with `CancellationToken.None` | `Unanswered_item_request_is_unavailable_at_the_deadline` |
+| V25 | `KohaOptions.cs` | Default deadline 60 seconds | `Registered_koha_deadline_is_ten_seconds` |
+| V26 | `KohaServiceCollectionExtensions.cs` | Bearer handler registered outside the timeout handler | `Registered_api_client_bounds_token_acquisition_by_the_deadline` |
+| V33 | `GetItemUseCase.cs` | Gateway given `CancellationToken.None` | `Passes_caller_cancellation_token_to_gateway` |
+| X1 | `KohaGetItemAdapter.cs` | Caller cancellation treated as unavailable | `Caller_cancellation_during_item_request_is_propagated` |
+| X2 | `KohaGetItemAdapter.cs` | Only 429 and 502 treated as unavailable | `Translates_item_http_failures` (500 and 503 rows) |
+| X3 | `KohaGetItemAdapter.cs` | Unusable Koha responses treated as unavailable | `Unusable_success_body_is_an_invalid_response` (both rows) |
 
 **Notes**
 
@@ -134,12 +155,12 @@ Run for pull request #11 (based on `e850a93`), on 2026-11-15:
 | Command | Result |
 | --- | --- |
 | `dotnet format minioasis.slnx --verify-no-changes --no-restore` | passed |
-| `dotnet test minioasis.slnx --configuration Release --no-restore` | passed: 98 tests (Application 16, Koha 51, Api 31), 0 failed. Rerun after the concurrency test was strengthened: same result |
+| `dotnet test minioasis.slnx --configuration Release --no-restore` | passed: 110 tests (Application 17, Koha 60, Api 33), 0 failed. The timing-based tests passed 10 repeated runs |
 | `dotnet publish Minioasis.Api/Minioasis.Api.csproj --configuration Release --no-restore` | passed |
 
 ## Independent verification
 
-Not yet performed.
+**Round 1 (2026-11-15, at `72b7e35`): not verified.** A separate agent independently broke at least one aspect of every requirement and edge case. Seven changes went uncaught by the full suite: V06, W1, V19, V24, V25, V26 and V33. It confirmed notes 1–3, the wiring, and that nothing only a real Koha can show is recorded as a pass. Tests were added for all seven.
 
 ## Manual acceptance (maintainer)
 
