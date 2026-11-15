@@ -84,15 +84,15 @@ An edge case with no state is an open question, and blocks approval.
 
 ## One-way decisions (step 4)
 
-A decision is one-way when undoing it would force a change outside this repository's code. The agent finds these while planning and confirms that the approved spec settles each one. If the spec is silent, the agent stops and asks. Every other decision is two-way: undoing it changes only this repository's code, and the agent decides it.
+A decision is one-way when undoing it would force a change outside this repository's code. The agent finds these while planning and confirms that the approved spec settles each one. If the spec is silent, the agent stops and asks. Everything else is the agent's to decide.
 
 | Decision | Kind | Why |
 | --- | --- | --- |
-| Names of internal classes, files, and folders | Two-way | Only the code changes, and tests catch mistakes |
-| How code is split between methods or layers | Two-way | Same |
-| Which internal technique is used, such as caching a token | Two-way | Invisible from outside |
-| Wording of log messages | Two-way | Nothing depends on it |
-| A tuning value, such as a timeout of 10 or 15 seconds | Two-way | One number in one place |
+| Names of internal classes, files, and folders | Easy | Only the code changes, and tests catch mistakes |
+| How code is split between methods or layers | Easy | Same |
+| Which internal technique is used, such as caching a token | Easy | Invisible from outside |
+| Wording of log messages | Easy | Nothing depends on it |
+| A tuning value, such as a timeout of 10 or 15 seconds | Easy | One number in one place |
 | A route such as `/api/v1/items/{id}` | One-way | Every client calling it would break |
 | Field names and types in a response | One-way | Same |
 | Public error codes such as `items.not_found` | One-way | Clients decide what to show from them |
@@ -103,7 +103,7 @@ A decision is one-way when undoing it would force a change outside this reposito
 | Names of configuration values such as `MINIOASIS_KOHA_BASE_URL` | One-way | A deployed server would stop starting |
 | The exact words of error messages staff see | One-way | Staff get used to them; `AGENTS.md` keeps them fixed |
 
-The table gives examples, not limits. The test applies to every decision: if undoing it would change something outside the code, it is one-way, whether or not it is listed here; otherwise it is two-way.
+The table gives examples, not limits. The test applies to every decision: if undoing it would change something outside the code, it is one-way, whether or not it is listed here.
 
 ## Plan check (step 5)
 

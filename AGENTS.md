@@ -206,8 +206,8 @@ These rules are binding. `docs/specs/README.md` explains the folder layout, numb
 - If a package or tool cannot be found or installed, stop. Never substitute one with a similar name.
 - Mark one-way decisions in the plan. A decision is one-way when undoing it would force a change outside this repository's code: to a client of the API, to stored data, to an external service or its accounts, to a record in Koha, to deployed configuration, or to how staff work.
   - Always one-way: routes, response fields, public error codes, storage formats, the choice of external service, staff login, Koha write behavior, and configuration names.
-  - Always two-way, meaning only this repository's code changes and the agent decides: internal names, code structure, internal techniques, log wording, and tuning values.
-  - These lists are examples, not limits. Apply the test to every decision. A decision that is on neither list is one-way whenever you can name what undoing it would change outside the code, and two-way when you cannot.
+  - Never one-way: internal names, code structure, internal techniques, log wording, and tuning values.
+  - These lists are examples, not limits. Apply the test to every decision. A decision that is on neither list is one-way whenever you can name what undoing it would change outside the code, and is not one-way when you cannot.
   - A one-way decision must be settled by the approved spec or an accepted Level 2 change before any code depends on it.
 - Size each pull request so that one session can finish it. If a session ends with work unfinished, push the branch and end the draft pull request description with a "Hand-off" section: the current state, what remains, the decisions made and why, and the next action.
 

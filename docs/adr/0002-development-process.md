@@ -21,7 +21,7 @@ Do not install GSD Core. Adopt its strongest ideas as plain rules and templates 
 | Discuss before planning; record decisions as locked, agent's discretion, or deferred | Spec rules; "Decisions" in `spec.md` |
 | Probe edge cases and prohibitions (must-not rules) before approval | "Edge cases" and "Prohibitions" in `spec.md` |
 | Check the plan with a second agent before code exists, including a check for quietly reduced scope | Step 5 in `docs/specs/README.md`; Spec rules |
-| Flag one-way decisions for a human; leave two-way ones to the agent | Implementation rules; "One-way decisions" in `plan.md` |
+| Flag one-way decisions for a human; leave reversible ones alone | Implementation rules; "One-way decisions" in `plan.md` |
 | Rules for unplanned work: fix bugs and blockers, stop for structural changes | Implementation rules |
 | Never substitute a package that fails to install | Implementation rules |
 | Map every requirement to an automated test before building | "Tests" in `plan.md`; `verification.md` |
