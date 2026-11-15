@@ -60,7 +60,7 @@ Test paths are shortened. `Api` means `Minioasis.Api.Tests`, and the same for th
 | R12 | Client aborts → nothing is logged at Error level or above, and neither internal-failure message is logged | `Api::ApiErrorHandlingTests::Propagates_caller_cancellation_without_logging_an_internal_failure` | yes: P14 (the endpoint logs an error for the abandoned request; failed in 5 of 5 runs), and S34 (the test hung and was aborted; see note 2) | ✅ pass |
 | R13 | Date `2026-09-06` under culture `ar-SA` → found | `Koha::KohaGetItemAdapterFailureTests::Iso_date_is_parsed_independently_of_current_culture` | yes, S35 | ✅ pass |
 
-**Gaps: 0.** Every requirement row has a passing test that was seen to fail when its behavior was broken.
+**Gaps: 7, open.** Every row in this table has a passing test that was seen to fail when its behavior was broken. However, independent verification round 3 found seven parts of the spec that no test proves; see [Independent verification](#independent-verification). The spec is not `verified`.
 
 Independent verification round 1 found seven code changes that no test caught (V06, W1, V19, V24, V25, V26, V33), and round 2 found four more (K4, K5, K11, P14). The rows marked with those identifiers, and the X rows, were added to close them.
 
@@ -145,8 +145,8 @@ Each change was applied alone, only the named tests were run, and the file was r
 
 1. **S12 and S24 had no effect, because those catch blocks are not on the path the failures take.** The timeout handler buffers the body. A cut-off body therefore reaches the adapter as an `HttpRequestException`, not an `HttpIOException`, so S12b is the change that proves R6. The NSwag client reports an unreadable body as a `KohaServiceException`, not a `JsonException`, so S23 proves R8. Both catch blocks look unreachable in the configured handler chain. They were left in place because removing them is a refactor outside this verification.
 2. **S34 hangs instead of failing cleanly.** Without the cancellation token, the stub use case never finishes. The test's own 10-second wait fails, but disposing the test host then waits for the abandoned request. The run still fails (the hang detector aborts it, and CI would time out), but a cleaner failure would be better. This is a possible test improvement, not a gap. The three Koha tests that hung in the same way under round 2's changes (K8, K24) now wait at most 5 seconds and fail cleanly.
-4. **Known limits recorded by round 2, not spec violations.** A caller waiting behind a token refresh does not react to its own cancellation until the refresh ends, which is bounded by the deadline (K23). No test pins the token provider as a singleton in the real composition; the shared refresh is proven on a directly constructed provider (K25). The timeout handler's rethrow of the caller's cancellation is redundant, because `HttpClient` re-attaches the caller's token itself (K13).
 3. **The concurrency test was strengthened in this change.** Its fake token server answered instantly, so the 20 callers ran one after another and S36 had no effect. The token response is now held until all 20 calls are waiting. The test passed 10 runs in a row.
+4. **Known limits recorded by round 2, not spec violations.** A caller waiting behind a token refresh does not react to its own cancellation until the refresh ends, which is bounded by the deadline (K23). No test pins the token provider as a singleton in the real composition; the shared refresh is proven on a directly constructed provider (K25). The timeout handler's rethrow of the caller's cancellation is redundant, because `HttpClient` re-attaches the caller's token itself (K13).
 
 ## Wiring
 
@@ -172,6 +172,22 @@ Run at the head of pull request #12, on 2026-11-15:
 **Round 1 (2026-11-15, at `72b7e35`): not verified.** A separate agent independently broke at least one aspect of every requirement and edge case. Seven changes went uncaught by the full suite: V06, W1, V19, V24, V25, V26 and V33. It confirmed notes 1–3, the wiring, and that nothing only a real Koha can show is recorded as a pass. Tests were added for all seven.
 
 **Round 2 (2026-11-15, at `d5ecf44`): not verified.** A second, fresh agent devised its own changes, at least two per requirement, including the composition and wiring. Four changes went uncaught: K4 (any 5xx), K5 (any other 4xx), K11 (non-GET methods other than POST) and P14 (error-level log for an abandoned request). It also reported tests that hang rather than fail (K8, K24, S34) and that the Checks section did not match its commit. Tests were added for all four, the Koha tests that hung now fail cleanly, and the Checks section was corrected.
+
+**Round 3 (2026-11-15, at `f08d017`): not verified.** A third, fresh agent applied 78 deliberate code changes. Every wiring and composition change was caught. Seven changes that violate explicit statements in spec.md still passed all 119 tests:
+
+| # | Spec statement | Surviving change | Test that would close it |
+| --- | --- | --- | --- |
+| 1 | R3: an identifier that is not a whole number is rejected without calling Koha | Parse as a decimal and truncate: `12.5` and `1,000` reach Koha | Adapter rows for `12.5`, `1,000` and `1e3` |
+| 2 | Edge: an identifier larger than a 32-bit number is rejected | `long` parse with an unchecked cast: `4294967308` reaches Koha as item 12 | Adapter row `4294967308` |
+| 3 | R5: the detail names the requested identifier | Detail hard-coded to `"12"`; every test uses 12 | A not-found test with another identifier, at use-case or composition level |
+| 4 | R1 / edge: `barcode` and `callNumber` may be `null` | Null fields left out of the JSON | An API or composition test asserting `"barcode": null` and `"callNumber": null` are present |
+| 5 | R10: a 10-second deadline | Deadline applied as 1.25× the setting | A tighter bound in `Total_deadline_...`, or a test of the applied deadline with a fake time provider |
+| 6 | R12: an abandoned request is not reported as a failure | The use case catches the cancellation and returns Unavailable | A use-case test that cancellation propagates, or a composition-level abort test |
+| 7 | Prohibition: retry nothing that is not a GET | HEAD and OPTIONS retried after a 401 | `HEAD` and `OPTIONS` rows in `Does_not_retry_non_get_request` |
+
+Non-blocking findings from round 3: `KohaAccessTokenProviderTests.Preserves_caller_cancellation` hangs instead of failing when the provider ignores the caller's token; the adapter's `item is null` check is also unreachable; no test shows that `id` comes from Koha's `item_id` rather than the request (the spec does not say which); the full suite passed 8 of 8 runs on unmodified source.
+
+**The review-and-fix loop has stopped.** `AGENTS.md` stops it after three rounds, or sooner if a round does not reduce the blocking findings. Round 3 was the third round, and it found 7 blocking findings after round 2's 4. The remaining findings are left for the maintainer.
 
 ## Manual acceptance (maintainer)
 

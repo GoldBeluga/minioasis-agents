@@ -8,11 +8,11 @@ This file holds only what GitHub and Git cannot show. Work in progress is the li
 
 ## Current spec
 
-- **001 Get item:** `approved`. All test gaps are closed. Before it is verified, "Seen failing" must be recorded for the older tests and an independent agent must verify it; see `docs/specs/001-get-item/verification.md`.
+- **001 Get item:** `approved`, not verified. "Seen failing" is recorded for every test. Independent verification stopped after three rounds with 7 open findings; the pull request waits for the maintainer. See `docs/specs/001-get-item/verification.md`.
 
 ## Next
 
-- Record "Seen failing" for the remaining 001 tests, have it verified independently, and create `ready/001-get-item`.
+- Maintainer decides how to close the 7 open findings in spec 001, then it is verified and `ready/001-get-item` is created.
 - Draft spec 002 (staff authentication design) for the maintainer.
 
 ## Recent decisions
