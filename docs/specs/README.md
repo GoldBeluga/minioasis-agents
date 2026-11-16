@@ -126,6 +126,10 @@ The verifying agent did not write the code. For each requirement it confirms thr
 2. **Real:** it is not a placeholder, a hard-coded answer, or an empty method.
 3. **Wired:** it is registered for dependency injection and reachable from its endpoint.
 
+Before this step, the author fills in the clause checklist in `verification.md`: one row for each clause of the spec, including every named input class, edge case, and prohibition, with the test that proves it. Building the checklist from the spec's words, not from the existing tests, is what finds missing tests.
+
+The verifying agent works through that checklist. For each clause it directly breaks the stated behavior once and confirms that a test fails. The bar is fixed in `AGENTS.md`: a clause with no failing test is a blocking finding, and anything else is non-blocking.
+
 Then it checks that each test was seen to fail, runs the checks, and fills in `verification.md`. Anything the tests cannot show is marked "needs maintainer", never "pass".
 
 ## Worked example

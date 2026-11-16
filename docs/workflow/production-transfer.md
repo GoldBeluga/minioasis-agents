@@ -74,7 +74,7 @@ Then apply the branch protection settings below, and tell an agent that spec 001
 - [ ] **Security:** authentication, logging, configuration, `Dockerfile`, `compose.yaml`; no secrets or patron data in logs.
 - [ ] **Public contract:** routes and `Minioasis.Api/Resources/errors.en.json`.
 - [ ] **Dependencies:** `*.csproj` package references and `dotnet-tools.json`.
-- [ ] **Safeguards:** every change to `AGENTS.md`, `docs/specs/README.md`, `docs/specs/_template/`, `docs/workflow/`, `.claude/`, or `.github/` is one you accepted. GitHub cannot enforce this rule, so this check is the backstop.
+- [ ] **Safeguards:** every change to `AGENTS.md`, `docs/platform/`, `docs/specs/README.md`, `docs/specs/_template/`, `docs/workflow/`, `.claude/`, or `.github/` is one you accepted. GitHub cannot enforce this rule, so this check is the backstop.
 - [ ] **CI:** passing on the pull request.
 
 Style, naming, and layering are checked by CI and the reviewer agent. You do not need to review them.

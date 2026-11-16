@@ -74,7 +74,7 @@
 | --- | --- | --- | --- |
 | | | | |
 
-Server failures (500, 502, 503) always return `internal_error` without detail, as `AGENTS.md` requires. List only the situations that cause them.
+Server failures (500, 502, 503) always return `internal_error` without detail, as `docs/platform/api-error-contract.md` requires. List only the situations that cause them.
 
 ## Koha operations
 
