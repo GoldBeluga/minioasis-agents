@@ -43,6 +43,10 @@ public sealed class KohaGetItemAdapterTests
     [InlineData("0")]
     [InlineData("-5")]
     [InlineData("2147483648")]
+    [InlineData("4294967308")]
+    [InlineData("12.5")]
+    [InlineData("1,000")]
+    [InlineData("1e3")]
     public async Task Rejects_non_positive_or_out_of_range_identifier_without_network(string identifier)
     {
         var handler = new StubHttpMessageHandler((_, _) => throw new InvalidOperationException());

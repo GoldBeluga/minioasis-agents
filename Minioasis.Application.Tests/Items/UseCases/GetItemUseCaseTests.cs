@@ -85,6 +85,30 @@ public sealed class GetItemUseCaseTests
         Assert.Equal(cancellation.Token, gateway.LastCancellationToken);
     }
 
+    [Fact]
+    public async Task Propagates_cancellation_from_gateway()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        var gateway = new FakeGetItemGateway(GetItemGatewayResult.NotFound())
+        {
+            Failure = new OperationCanceledException(cancellation.Token)
+        };
+        var useCase = Create(gateway);
+        var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            useCase.ExecuteAsync(new GetItemRequest("12"), cancellation.Token));
+        Assert.Equal(cancellation.Token, exception.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Not_found_names_the_requested_identifier()
+    {
+        var useCase = Create(GetItemGatewayResult.NotFound());
+        var result = await useCase.ExecuteAsync(new GetItemRequest("77"), TestContext.Current.CancellationToken);
+        Assert.Equal("items.not_found", result.Error!.Code);
+        Assert.Equal("77", result.Error.Metadata!["id"]);
+    }
+
     private static IGetItemUseCase Create(GetItemGatewayResult result) => Create(new FakeGetItemGateway(result));
 
     private static IGetItemUseCase Create(FakeGetItemGateway gateway)
@@ -124,6 +148,11 @@ public sealed class GetItemUseCaseTests
             get; private set;
         }
 
+        public Exception? Failure
+        {
+            get; init;
+        }
+
         public Task<GetItemGatewayResult> GetItemAsync(
             ItemId itemId,
             CancellationToken cancellationToken = default)
@@ -131,6 +160,11 @@ public sealed class GetItemUseCaseTests
             Calls++;
             LastItemId = itemId;
             LastCancellationToken = cancellationToken;
+            if (Failure is not null)
+            {
+                return Task.FromException<GetItemGatewayResult>(Failure);
+            }
+
             return Task.FromResult(result);
         }
     }

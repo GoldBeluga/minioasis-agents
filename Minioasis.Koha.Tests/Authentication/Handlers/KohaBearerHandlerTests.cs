@@ -71,6 +71,8 @@ public sealed class KohaBearerHandlerTests
     [InlineData("PUT")]
     [InlineData("PATCH")]
     [InlineData("DELETE")]
+    [InlineData("HEAD")]
+    [InlineData("OPTIONS")]
     public async Task Does_not_retry_non_get_request(string method)
     {
         var inner = new StubHttpMessageHandler((_, _) =>

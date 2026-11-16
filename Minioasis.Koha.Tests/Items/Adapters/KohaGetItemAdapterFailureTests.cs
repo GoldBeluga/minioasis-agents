@@ -76,6 +76,24 @@ public sealed class KohaGetItemAdapterFailureTests
     }
 
     [Fact]
+    public async Task Deadline_is_applied_as_configured()
+    {
+        using var harness = new GetItemAdapterHarness(
+            (_, _) => Task.FromResult(Token()),
+            (_, cancellationToken) => WaitForever(cancellationToken),
+            TimeSpan.FromSeconds(2));
+        var elapsed = Stopwatch.StartNew();
+
+        var result = await harness.Gateway
+            .GetItemAsync(new ItemId("12"), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        elapsed.Stop();
+        Assert.Equal(GetItemOutcome.Unavailable, result.Outcome);
+        Assert.InRange(elapsed.Elapsed, TimeSpan.FromSeconds(1.9), TimeSpan.FromSeconds(2.4));
+    }
+
+    [Fact]
     public async Task Unanswered_item_request_is_unavailable_at_the_deadline()
     {
         using var harness = new GetItemAdapterHarness(
