@@ -6,7 +6,7 @@ Planned and completed specs, in intended order. Agents may add `proposed` rows a
 
 | # | Spec | Status | Why / notes |
 | --- | --- | --- | --- |
-| 001 | [Get item](specs/001-get-item/spec.md) | approved | Existing behavior, documented after the fact. Not yet verified: independent verification stopped after three rounds with 7 open findings, awaiting the maintainer. |
+| 001 | [Get item](specs/001-get-item/spec.md) | approved | Existing behavior, documented after the fact. Not yet verified: all gaps found by three verification rounds have tests; a final independent check and maintainer acceptance remain. |
 | 002 | Staff authentication: design | proposed | The largest gap: the API is open to anyone who can reach it. Decides staff identity (for example Cloudflare Access, an OIDC provider, or Supabase) and how staff actions are audited, because Koha attributes every call to the service account. A design and ADR only; implementation is a follow-up spec. |
 | 003 | Health endpoint | proposed | Needed for container and infrastructure monitoring. |
 | — | Circulation and catalogue workflows | to be decided | Maintainer to choose and order them, for example check out, check in, renew, holds, item search, and record edits. |

@@ -16,14 +16,17 @@ Test paths are shortened. `Api` means `Minioasis.Api.Tests`, and the same for th
 | R1 | Gateway finds an item → use case returns it unchanged | `Application::GetItemUseCaseTests::Returns_get_item_response_when_gateway_finds_item` | yes, S02 | ✅ pass |
 | R1 | Use case succeeds → API returns 200 with exactly the fields `barcode`, `bibliographicRecordId`, `callNumber`, `id` | `Api::ItemEndpointsTests::Returns_item_json_from_application_use_case` | yes, S03 | ✅ pass |
 | R1, R3 | Production composition (real use case, adapter, handlers and dependency injection; only the network below the Koha HTTP clients is fake): `GET /api/v1/items/%2077%20` → 200 with id 77, Koha receives `/api/v1/items/77` with the bearer token; `GET /api/v1/items/abc` → 400 `items.invalid_identifier` with no Koha request | `Api::ItemEndpointsCompositionTests` (2 tests) | yes, V06 (route identifier ignored) and W1 (gateway registration removed) | ✅ pass |
+| R1 | Koha item without barcode or call number → 200 whose JSON contains `"barcode": null` and `"callNumber": null` | `Api::ItemEndpointsCompositionTests::Item_without_barcode_or_call_number_returns_explicit_nulls` | yes, G4 (null fields left out of JSON) | ✅ pass |
 | R2 | Identifier `"  "` → `items.invalid_identifier`, and the gateway is called 0 times | `Application::GetItemUseCaseTests::Rejects_blank_identifier_without_calling_gateway` | yes, S04 | ✅ pass |
 | R2, R3, R4 | Validation error → 400 with the correct title, detail, code, `traceId`, `application/problem+json`, and no `type` or `instance` | `Api::ItemEndpointsTests::Maps_application_errors_to_problem_details` (validation row) | yes, S05 | ✅ pass |
 | R3 | Identifier `"koha-12"` → invalid identifier, and 0 network calls | `Koha::KohaGetItemAdapterTests::Rejects_non_numeric_identifier_without_network` | yes, S06 | ✅ pass |
+| R3 | Identifier `"12.5"`, `"1,000"` or `"1e3"` → invalid identifier, and 0 network calls | `Koha::KohaGetItemAdapterTests::Rejects_non_positive_or_out_of_range_identifier_without_network` (3 rows) | yes, G1 (decimal parsed and truncated: a network call was attempted) | ✅ pass |
 | R3, R4 | Gateway reports an invalid identifier → `items.invalid_identifier` / Validation | `Application::GetItemUseCaseTests::Translates_gateway_outcomes` (InvalidIdentifier row) | yes, S07 | ✅ pass |
 | R4 | Identifier `"0"` or `"-5"` → invalid identifier, and 0 network calls | `Koha::KohaGetItemAdapterTests::Rejects_non_positive_or_out_of_range_identifier_without_network` (`"0"` and `"-5"` rows) | yes: removing `kohaId <= 0` from the adapter made both rows fail (a network call was attempted) | ✅ pass |
 | R5 | Koha 404 → not found | `Koha::KohaGetItemAdapterTests::Translates_item_http_failures` (404 row) | yes, S08 | ✅ pass |
 | R5 | Not found → `items.not_found` / NotFound | `Application::GetItemUseCaseTests::Translates_gateway_outcomes` (NotFound row) | yes, S09 | ✅ pass |
 | R5 | Not found → 404, detail "No item was found with identifier 12." | `Api::ItemEndpointsTests::Maps_application_errors_to_problem_details` (not-found row) | yes, S10 | ✅ pass |
+| R5 | Koha has no item 9001 → 404 with detail "No item was found with identifier 9001.", through the production composition; and the use case names `77` for a request for 77 | `Api::ItemEndpointsCompositionTests::Missing_item_returns_not_found_naming_the_requested_identifier`, `Application::GetItemUseCaseTests::Not_found_names_the_requested_identifier` | yes, G3 (detail always names 12) | ✅ pass |
 | R6 | Koha 429 and 502 → unavailable | `Koha::KohaGetItemAdapterTests::Translates_item_http_failures` (429 and 502 rows) | yes, S11 | ✅ pass |
 | R6 | Koha 500 and 503 → unavailable | `Koha::KohaGetItemAdapterTests::Translates_item_http_failures` (500 and 503 rows) | yes, X2 | ✅ pass |
 | R6 | Koha 504 and 599 → unavailable ("any 5xx") | `Koha::KohaGetItemAdapterTests::Translates_item_http_failures` (504 and 599 rows) | yes, K4 | ✅ pass |
@@ -50,17 +53,19 @@ Test paths are shortened. `Api` means `Minioasis.Api.Tests`, and the same for th
 | R9 | Unhandled exception, in Development and in Production → masked 500, and the exception is logged with `traceId` | `Api::ApiErrorHandlingTests::Masks_unhandled_exceptions_and_logs_exception_with_response_trace_id` | yes: S27 (body gains a `detail`), S28 (exception not logged) | ✅ pass |
 | R10 | 300 ms OAuth plus a stalled body under a 500 ms deadline → unavailable in under 700 ms | `Koha::KohaGetItemAdapterFailureTests::Total_deadline_includes_oauth_and_item_response_body` | yes, S29 | ✅ pass |
 | R10 | The registered deadline is 10 seconds | `Koha::KohaServiceCollectionExtensionsTests::Registered_koha_deadline_is_ten_seconds` | yes, V25 | ✅ pass |
+| R10 | The configured deadline is the one applied: a 2-second deadline ends an unanswered request after 1.9–2.4 s | `Koha::KohaGetItemAdapterFailureTests::Deadline_is_applied_as_configured` | yes, G5 (1.25× deadline: took 2.52 s) | ✅ pass |
 | R10 | The API client registered by `AddMinioasisKoha` puts token acquisition inside the deadline: OAuth never answers → authentication failure in under 5 s with a 300 ms deadline | `Koha::KohaServiceCollectionExtensionsTests::Registered_api_client_bounds_token_acquisition_by_the_deadline` | yes, V26 (handler order swapped) | ✅ pass |
 | R11 | First 401 → fresh token, then a single retry | `Koha::KohaBearerHandlerTests::Retries_get_once_with_fresh_token_after_401` | yes, S30 | ✅ pass |
 | R11 | Second 401 → no further retry | `Koha::KohaBearerHandlerTests::Does_not_retry_a_second_401` | yes, S31 | ✅ pass |
-| R11 | 401 on POST, PUT, PATCH or DELETE → no retry | `Koha::KohaBearerHandlerTests::Does_not_retry_non_get_request` (4 rows) | yes: S32 (all methods retried), K11 (only POST excluded: the PUT, PATCH and DELETE rows failed) | ✅ pass |
+| R11 | 401 on POST, PUT, PATCH, DELETE, HEAD or OPTIONS → no retry | `Koha::KohaBearerHandlerTests::Does_not_retry_non_get_request` (6 rows) | yes: S32 (all methods retried), K11 (only POST excluded: the PUT, PATCH and DELETE rows failed), G7 (HEAD and OPTIONS retried: those rows failed) | ✅ pass |
 | R12 | Client cancels during OAuth → the cancellation propagates with the caller's token | `Koha::KohaGetItemAdapterFailureTests::Caller_cancellation_during_oauth_is_propagated` | yes, S33 | ✅ pass |
 | R12 | Client cancels during the item request → the cancellation propagates with the caller's token | `Koha::KohaGetItemAdapterFailureTests::Caller_cancellation_during_item_request_is_propagated` | yes, X1 | ✅ pass |
 | R12 | The use case passes the caller's cancellation token to the gateway | `Application::GetItemUseCaseTests::Passes_caller_cancellation_token_to_gateway` | yes, V33 | ✅ pass |
+| R12 | A cancellation thrown by the gateway leaves the use case as a cancellation, not as a failure result | `Application::GetItemUseCaseTests::Propagates_cancellation_from_gateway` | yes, G6 (use case returned unavailable) | ✅ pass |
 | R12 | Client aborts → nothing is logged at Error level or above, and neither internal-failure message is logged | `Api::ApiErrorHandlingTests::Propagates_caller_cancellation_without_logging_an_internal_failure` | yes: P14 (the endpoint logs an error for the abandoned request; failed in 5 of 5 runs), and S34 (the test hung and was aborted; see note 2) | ✅ pass |
 | R13 | Date `2026-09-06` under culture `ar-SA` → found | `Koha::KohaGetItemAdapterFailureTests::Iso_date_is_parsed_independently_of_current_culture` | yes, S35 | ✅ pass |
 
-**Gaps: 7, open.** Every row in this table has a passing test that was seen to fail when its behavior was broken. However, independent verification round 3 found seven parts of the spec that no test proves; see [Independent verification](#independent-verification). The spec is not `verified`.
+**Gaps: 0 known.** Every row in this table has a passing test that was seen to fail when its behavior was broken. The seven gaps found by verification round 3 are closed by the rows marked G1–G7. A final independent check is recorded under [Independent verification](#independent-verification).
 
 Independent verification round 1 found seven code changes that no test caught (V06, W1, V19, V24, V25, V26, V33), and round 2 found four more (K4, K5, K11, P14). The rows marked with those identifiers, and the X rows, were added to close them.
 
@@ -71,7 +76,7 @@ Independent verification round 1 found seven code changes that no test caught (V
 | Item from the spec | State | Proven by |
 | --- | --- | --- |
 | Identifier has spaces around a valid number | covered | `Application::GetItemUseCaseTests::Trims_identifier_before_calling_gateway`: `"  12 "` reaches the gateway as `"12"`, and the not-found detail names `"12"`. Seen failing: yes, removing `Trim()` made it fail |
-| Identifier is larger than a 32-bit number | covered | `Koha::KohaGetItemAdapterTests::Rejects_non_positive_or_out_of_range_identifier_without_network` (`"2147483648"` row). Seen failing: yes, parsing as a 64-bit number made it fail (a network call was attempted) |
+| Identifier is larger than a 32-bit number | covered | `Koha::KohaGetItemAdapterTests::Rejects_non_positive_or_out_of_range_identifier_without_network` (`"2147483648"` and `"4294967308"` rows). Seen failing: yes, parsing as a 64-bit number made the first fail, and G2 (64-bit parse with a wrapping cast) made the second fail |
 | Item has no barcode or call number | covered | `Koha::KohaGetItemAdapterTests::Maps_missing_barcode_and_call_number_to_null`: an explicit `null` barcode and an absent call number both come back as `null`. Seen failing: yes, substituting an empty string made it fail |
 | Many requests share one token refresh | covered | `Koha::KohaAccessTokenProviderTests::Concurrent_callers_share_one_refresh`: the token response is held until all 20 callers are waiting. Seen failing: yes, S36 (20 token requests instead of 1). See note 3 |
 | All other covered edge cases and prohibitions | covered | The requirement rows above |
@@ -139,6 +144,13 @@ Each change was applied alone, only the named tests were run, and the file was r
 | K11 | `KohaBearerHandler.cs` | Only POST excluded from the 401 retry | `Does_not_retry_non_get_request` (PUT, PATCH and DELETE rows) |
 | P14 | `ItemEndpoints.cs` | Endpoint logs an error for an abandoned request, then rethrows | `Propagates_caller_cancellation_without_logging_an_internal_failure` (5 of 5 runs) |
 | K8 | `KohaRequestTimeoutHandler.cs` | Body no longer buffered inside the deadline | `Total_deadline_includes_oauth_and_item_response_body`: fails cleanly after 5 s (it hung before this change) |
+| G1 | `KohaGetItemAdapter.cs` | Identifier parsed as a decimal and truncated | `Rejects_non_positive_or_out_of_range_...` (`"12.5"`, `"1,000"`, `"1e3"` rows) |
+| G2 | `KohaGetItemAdapter.cs` | Identifier parsed as 64-bit and cast with wrap-around | `Rejects_non_positive_or_out_of_range_...` (`"4294967308"` row) |
+| G3 | `GetItemUseCase.cs` | Not-found detail always names 12 | `Not_found_names_the_requested_identifier` (expected "77", got "12"), `Missing_item_returns_not_found_naming_the_requested_identifier` |
+| G4 | `Program.cs` | Null fields left out of all JSON responses | `Item_without_barcode_or_call_number_returns_explicit_nulls` |
+| G5 | `KohaRequestTimeoutHandler.cs` | Deadline applied as 1.25× the setting | `Deadline_is_applied_as_configured` (2.52 s, outside 1.9–2.4 s) |
+| G6 | `GetItemUseCase.cs` | Cancellation swallowed and returned as unavailable | `Propagates_cancellation_from_gateway` (no exception thrown) |
+| G7 | `KohaBearerHandler.cs` | HEAD and OPTIONS retried after a 401 | `Does_not_retry_non_get_request` (HEAD and OPTIONS rows: expected 1 call, got 2) |
 | K24 | `KohaAccessTokenProvider.cs` | OAuth called with `CancellationToken.None` | `OAuth_timeout_is_an_authentication_failure`, `Caller_cancellation_during_oauth_is_propagated`: both fail cleanly after 5 s (they hung before this change) |
 
 **Notes**
@@ -159,12 +171,12 @@ Each change was applied alone, only the named tests were run, and the file was r
 
 ## Checks
 
-Run at the head of pull request #12, on 2026-11-15:
+Run at the head of pull request #12, on 2026-11-16:
 
 | Command | Result |
 | --- | --- |
 | `dotnet format minioasis.slnx --verify-no-changes --no-restore` | passed |
-| `dotnet test minioasis.slnx --configuration Release --no-restore` | passed: 119 tests (Application 17, Koha 69, Api 33), 0 failed. The Koha and Api suites each passed 10 repeated runs |
+| `dotnet test minioasis.slnx --configuration Release --no-restore` | passed: 130 tests (Application 19, Koha 76, Api 35), 0 failed. The Koha suite passed 10 repeated runs and the Api suite 5 |
 | `dotnet publish Minioasis.Api/Minioasis.Api.csproj --configuration Release --no-restore` | passed |
 
 ## Independent verification
@@ -187,7 +199,38 @@ Run at the head of pull request #12, on 2026-11-15:
 
 Non-blocking findings from round 3: `KohaAccessTokenProviderTests.Preserves_caller_cancellation` hangs instead of failing when the provider ignores the caller's token; the adapter's `item is null` check is also unreachable; no test shows that `id` comes from Koha's `item_id` rather than the request (the spec does not say which); the full suite passed 8 of 8 runs on unmodified source.
 
-**The review-and-fix loop has stopped.** `AGENTS.md` stops it after three rounds, or sooner if a round does not reduce the blocking findings. Round 3 was the third round, and it found 7 blocking findings after round 2's 4. The remaining findings are left for the maintainer.
+**The review-and-fix loop stopped here.** `AGENTS.md` stops it after three rounds, or sooner if a round does not reduce the blocking findings. Round 3 was the third round, and it found 7 blocking findings after round 2's 4.
+
+**After round 3 (2026-11-16), on the maintainer's instruction in session:** tests were added for all seven findings (G1–G7), each seen to fail under the round-3 change. The maintainer also approved one final independent check against a fixed bar: every explicit Given/When/Then, edge case and prohibition in spec.md has a test that fails when it is directly broken.
+
+**Final check:** pending.
+
+### Clause checklist
+
+| Spec clause | Proving test |
+| --- | --- |
+| R1: 200 with `id`, `bibliographicRecordId`, `barcode`, `callNumber` | `Maps_generated_item_to_get_item_response`, `Returns_item_json_from_application_use_case`, `Route_identifier_reaches_koha_through_the_production_composition` |
+| R2: blank or whitespace → 400, no Koha call | `Rejects_blank_identifier_without_calling_gateway`, `Maps_application_errors_to_problem_details` |
+| R3: not a whole number → 400, no Koha call | `Rejects_non_numeric_identifier_without_network`, `Rejects_non_positive_or_out_of_range_...` (`12.5`, `1,000`, `1e3`), `Invalid_route_identifier_is_rejected_without_calling_koha` |
+| R4: zero or negative → 400, no Koha call | `Rejects_non_positive_or_out_of_range_...` (`0`, `-5`) |
+| R5: 404 `items.not_found`, detail names the identifier | `Translates_item_http_failures` (404), `Missing_item_returns_not_found_naming_the_requested_identifier`, `Not_found_names_the_requested_identifier` |
+| R6: 429 / any 5xx / connection failure / cut-off response / deadline → 503 | `Translates_item_http_failures` (429, 500, 502, 503, 504, 599), `Connection_failure_is_unavailable`, `Item_response_disconnection_is_unavailable`, `Unanswered_item_request_is_unavailable_at_the_deadline`, `Masks_server_failures_...` (503) |
+| R7: OAuth failure / 401 after retry / 403 → 500 | `Translates_item_http_failures` (401, 403), `Koha_401_that_persists_after_retry_...`, `OAuth_*`, `Converts_*`, `Masks_server_failures_...` (500) |
+| R8: other 4xx / unparseable body / no positive ids → 502 | `Translates_item_http_failures` (400, 405, 409, 410, 422), `Unusable_success_body_...`, `Invalid_date_...`, `Non_positive_identifiers_...`, `Masks_server_failures_...` (502) |
+| R9: masked body, logged with the same `traceId` | `Masks_server_failures_...`, `Masks_unhandled_exceptions_...` |
+| R10: 10-second deadline over token, request and response | `Registered_koha_deadline_is_ten_seconds`, `Deadline_is_applied_as_configured`, `Registered_api_client_bounds_token_acquisition_by_the_deadline`, `Total_deadline_includes_oauth_and_item_response_body` |
+| R11: 401 → new token, exactly one retry | `Retries_get_once_with_fresh_token_after_401`, `Does_not_retry_a_second_401`, `Koha_401_that_persists_after_retry_...` |
+| R12: abandoned request cancelled, not logged or reported as a failure | `Caller_cancellation_during_oauth_is_propagated`, `Caller_cancellation_during_item_request_is_propagated`, `Passes_caller_cancellation_token_to_gateway`, `Propagates_cancellation_from_gateway`, `Propagates_caller_cancellation_without_logging_an_internal_failure` |
+| R13: ISO dates under a non-English culture | `Iso_date_is_parsed_independently_of_current_culture` |
+| Edge: spaces around a valid number | `Trims_identifier_before_calling_gateway`, `Route_identifier_reaches_koha_...` |
+| Edge: larger than 32 bits | `Rejects_non_positive_or_out_of_range_...` (`2147483648`, `4294967308`) |
+| Edge: no barcode or call number | `Maps_missing_barcode_and_call_number_to_null`, `Item_without_barcode_or_call_number_returns_explicit_nulls` |
+| Edge: many requests share one token refresh | `Concurrent_callers_share_one_refresh` |
+| Prohibition: no Koha call for an invalid identifier | the R2, R3 and R4 tests (each asserts 0 calls) |
+| Prohibition: reveal nothing internal | the R9 tests |
+| Prohibition: no second retry, no non-GET retry | `Does_not_retry_a_second_401`, `Does_not_retry_non_get_request` (POST, PUT, PATCH, DELETE, HEAD, OPTIONS) |
+| Prohibition: abandoned request is not a server failure | the R12 tests |
+| Manual only: real Koha field forms, `catalogue` permission, secrets in logs | Manual acceptance scenarios 1 and 5 |
 
 ## Manual acceptance (maintainer)
 
