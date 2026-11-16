@@ -8,11 +8,11 @@ This file holds only what GitHub and Git cannot show. Work in progress is the li
 
 ## Current spec
 
-- **001 Get item:** `approved`, not verified. "Seen failing" is recorded for every test. Three verification rounds found 18 test gaps in total; all now have tests. A final independent check and the maintainer's acceptance of the pull request remain. See `docs/specs/001-get-item/verification.md`.
+- **001 Get item:** `verified` on 2026-11-16. Pull request #12 (labelled `needs-human`) carries the verification and waits for the maintainer's acceptance. See `docs/specs/001-get-item/verification.md`.
 
 ## Next
 
-- Final independent check of spec 001; then the maintainer accepts the pull request and `ready/001-get-item` is created.
+- Maintainer accepts pull request #12; then `ready/001-get-item` is created at the merge commit.
 - Draft spec 002 (staff authentication design) for the maintainer.
 
 ## Recent decisions

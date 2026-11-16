@@ -1,8 +1,8 @@
 # 001 — Get item: verification
 
 - **Spec:** [spec.md](spec.md)
-- **Verified at commit:** not yet; coverage reviewed against `7122045` on 2026-11-15; gaps closed by pull request #11 on 2026-11-15; "Seen failing" recorded for every row on 2026-11-15, against `0520881`; tests added after the first independent verification on 2026-11-15
-- **Transfer branch:** not yet
+- **Verified at commit:** `c2685c0` (tests and code), on 2026-11-16, by an independent agent. History: coverage reviewed against `7122045`; gaps closed by pull requests #11 and #12
+- **Transfer branch:** `ready/001-get-item`, to be created at the `master` commit that merges pull request #12
 
 ## Requirement coverage
 
@@ -203,7 +203,13 @@ Non-blocking findings from round 3: `KohaAccessTokenProviderTests.Preserves_call
 
 **After round 3 (2026-11-16), on the maintainer's instruction in session:** tests were added for all seven findings (G1–G7), each seen to fail under the round-3 change. The maintainer also approved one final independent check against a fixed bar: every explicit Given/When/Then, edge case and prohibition in spec.md has a test that fails when it is directly broken.
 
-**Final check:** pending.
+**Final check (2026-11-16, at `c2685c0`): verified.** A fresh agent walked the spec clause by clause and applied 119 of its own direct breaks, one at a time. Every clause of R1–R13, every covered edge case and every covered prohibition had a test that failed. Blocking findings: none. It confirmed the checks (130 tests), the test names and counts in this file, and that nothing only a real Koha can show is recorded as a pass.
+
+Non-blocking findings from the final check:
+
+1. With the cancellation token dropped at the endpoint, `Propagates_caller_cancellation_without_logging_an_internal_failure` hangs instead of failing (note 2). The CI workflow has no hang timeout, so such a regression would stall CI until the job times out. Adding one changes `.github/`, which is a Level 2 change.
+2. `Total_deadline_includes_oauth_and_item_response_body` (700 ms bound) failed once while three build-and-test runs shared 4 cores. Unloaded, the Koha suite passed every repeated run.
+3. An endpoint that swallows the cancellation, logs only a warning and returns 500 to the already-disconnected client passes all tests. Nothing is observable to staff and no failure is logged.
 
 ### Clause checklist
 

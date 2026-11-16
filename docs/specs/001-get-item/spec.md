@@ -1,10 +1,10 @@
 # 001 — Get item
 
-- **Status:** approved
+- **Status:** verified
 - **Kind:** read
 - **Related:** ADR 0001
 
-> This spec was written after the fact. It documents behavior already on `master` at commit `7122045`, taken from the code and tests. It designs nothing new. Merging the pull request that adds it is the maintainer's approval of this behavior. It is not yet `verified`, because the coverage review found test gaps; see [verification.md](verification.md).
+> This spec was written after the fact. It documents behavior already on `master` at commit `7122045`, taken from the code and tests. It designs nothing new. Merging the pull request that adds it is the maintainer's approval of this behavior. The coverage review found test gaps; they were closed and the spec was verified on 2026-11-16. See [verification.md](verification.md).
 
 ## Goal
 
