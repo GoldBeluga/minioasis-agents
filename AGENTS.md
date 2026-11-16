@@ -10,6 +10,16 @@ Challenge proportionately using concrete reasoning. Avoid manufacturing objectio
 
 Exercise this judgment throughout planning, implementation, testing, and review, within the repository boundaries and approval workflow.
 
+## What this file is
+
+This file holds the rules that apply to every capability: how work is approved, where code lives, how it is written, and how it is tested and verified. It does not describe any one capability.
+
+- What a capability does is in its spec under `docs/specs/`.
+- How shared components behave today is in the binding documents under `docs/platform/`.
+- Examples in this file use placeholders such as `<Feature>` and `<Operation>`.
+
+When a rule here would only make sense for one capability, it belongs in that capability's spec instead.
+
 ## Purpose and direction
 
 Minioasis is a library application for library staff, developed on .NET 10. Its product scope covers circulation and catalogue workflows. It should help staff carry out library work through coherent application operations, with business rules and integration behavior that remain understandable as the application grows.
@@ -90,7 +100,7 @@ Organization says where code lives. This section says how it is written. Write e
 - **Typed identifiers and value objects validate when they are created,** so an invalid one cannot exist. Code that receives one does not check it again.
 - **Components do not steer each other with private exceptions.** A component does not throw an exception type for a sibling to catch and convert, and does not catch a sibling's internal exception types. Report expected outcomes through return values, or through one documented exception type per failure kind that the boundary owns.
 - **Translate failures once per boundary.** Each adapter maps provider failures to Application outcomes in one clearly named place, in a stated order, so the mapping can be read as a table.
-- **One path per concern.** Each cross-cutting behavior, such as turning an unhandled exception into a response, enforcing a deadline, or attaching a token, has one implementation and one registration.
+- **One path per concern.** Each cross-cutting behavior has one implementation and one registration.
 - **No unreachable code.** Every branch and every `catch` must be reachable in the composed application and have a test that reaches it. Remove handling for failures that cannot arrive. If a failure arrives in a different form than the code expects, fix the code, not only the test.
 - **No speculative structure.** Add an abstraction, option, or extension point when a second real use needs it.
 
@@ -98,41 +108,29 @@ Apply these rules to new handwritten code. Bring existing code into line through
 
 ## Results and error reporting
 
-Application owns stable typed error definitions and the meaning of use-case outcomes. API owns presentation and HTTP status mapping. Translate recognized provider failures at the gateway boundary, then let the use case select the Application result. Return expected unsuccessful outcomes explicitly so callers can handle them consistently. Distinguish actionable application outcomes from failures the user cannot resolve. Explain invalid input, missing records, and expected workflow restrictions sufficiently for the client to guide the user. Preserve stable public error codes for these outcomes; clients should use codes rather than matching English messages.
+Application owns stable typed error definitions and the meaning of use-case outcomes. API owns presentation and HTTP status mapping. Translate recognized provider failures at the gateway boundary, then let the use case select the Application result. Return expected unsuccessful outcomes explicitly so callers can handle them consistently.
 
-To add an error, declare a `public static readonly ApplicationErrorDefinition` in the relevant feature's error-definition group. Mark a new group with the existing `[ErrorDefinitions]` attribute so registry discovery includes it. For a client-visible category (currently validation or not found), add the exact matching, case-sensitive key to `Minioasis.Api/Resources/errors.en.json` with nonblank `title` and `detail` values. Do not add resource entries for internal server-error categories. Return an `ApplicationError` built from the definition, supplying metadata for client-message placeholders where needed. When introducing another actionable category, explicitly design its public response and include it in resource validation.
+Distinguish outcomes the user can act on from failures the user cannot resolve. Explain an actionable outcome well enough for the client to guide the user, and give it a stable public error code; clients use codes rather than matching message text. For a failure the user cannot resolve, the response says only that it happened and carries a trace identifier. Its cause goes to the server log with the same identifier and is never shown to the client. Keep credentials and tokens out of all diagnostic output. Caller cancellation is not a failure and is not reported as one.
 
-The JSON resource must contain exactly the client-visible definitions from the registry. Preserve startup rejection of blank or duplicate identifiers, null definitions, invalid categories, and empty registries. Reject missing client-visible messages, entries for internal errors, and unknown, duplicate, malformed, null, or incomplete messages. Validate this at startup so inconsistent error definitions or presentation fail before requests depend on them.
+Define each error once. Check at startup that error definitions and their presentation agree, so an inconsistency stops the application before a request depends on it.
 
-Preserve the category mapping of validation to 400, not found to 404, invalid dependency response to 502, unavailable dependency to 503, and dependency authentication or unexpected failures to 500. Preserve the `code` and `traceId` Problem Details extensions. Only English is currently supported.
+The binding contract for every capability, covering status mapping, response shape, what is hidden, and the steps for adding an error, is `docs/platform/api-error-contract.md`. Read it before adding or changing an error or an error response.
 
-Every server-error response (500, 502, or 503) must use the title `Internal error` and public code `internal_error`, omit `detail`, and include the request's `traceId`. Do not expose provider names, internal error codes, authentication diagnoses, exceptions, or other technical explanations. Keep actionable errors' titles, details, and public codes. Return JSON with `application/problem+json` and omit `type` and `instance` links from error bodies. Keep this response policy consistent for returned Application failures and unhandled exceptions in Development and Production. Preserve caller cancellation rather than converting abandoned requests into internal errors.
+## External contracts and generated code
 
-Record the actual internal error code for recognized server failures and the exception for unexpected failures in server logs, together with the same request `traceId` returned to the client. Keep credentials and access tokens out of diagnostic output. Internal error definitions remain available for diagnostics even when the public code is masked. Define the generic server response once in the API response factory; keep the English resource exclusively for client-visible errors and maintain startup validation of that subset.
+Base provider operations on the checked-in provider contract. `contracts/official_koha_openapi.json` is an immutable reference. Never edit it. Derive a focused contract for the operations a capability needs from that reference, and keep each integration change consistent with its source contract. If a required operation is absent or ambiguous, stop and ask rather than inventing a protocol.
 
-## Koha contracts and generated code
-
-Base provider operations on the checked-in Koha contract. `contracts/official_koha_openapi.json` is an immutable reference. Never edit it. Derive focused contracts for the required operations from that reference and keep each integration change consistent with its source contract. If a required operation is absent or ambiguous, stop and ask rather than inventing a protocol.
-
-`Minioasis.Koha/Generated` is owned by NSwag. Do not hand-edit generated files. When an approved task changes a focused contract or `nswag.json`, restore the local tool and regenerate the affected client. These commands illustrate generation for the existing focused contracts.
-
-```powershell
-dotnet tool restore
-dotnet tool run nswag run nswag.json /variables:Contract=items,Feature=Items,FeatureSingular=Item
-dotnet tool run nswag run nswag.json /variables:Contract=oauth,Feature=OAuth,FeatureSingular=OAuth
-```
-
-For another approved focused contract, use the matching contract filename stem and intended generated feature/type names as the variables. Run only the generation relevant to the changed contract, inspect the generated diff, and commit the source contract, generator configuration when applicable, and resulting generated files together. Keep generated Koha types inside `Minioasis.Koha`.
+Generated code is owned by its generator. Do not hand-edit it. When an approved task changes a focused contract or the generator configuration, regenerate only the affected client, inspect the generated diff, and commit the contract, the configuration when it changed, and the generated files together. Keep generated types inside the integration project that owns them. The generation command is in `docs/platform/koha-integration.md`.
 
 ## Authentication, cancellation, and external failures
 
-Koha authentication is an integration responsibility shared by the workflows that call it. Preserve these authentication guarantees unless an approved plan explicitly changes authentication behavior. Use OAuth 2 client credentials with a least-privilege Koha service identity. Keep credentials outside source control and diagnostic output. Use separate HTTP clients for token acquisition and protected API calls. The token client must not use the bearer handler.
+Authentication to an external system is a responsibility of the integration project, shared by every capability that calls that system. A capability does not implement its own. Use a least-privilege service identity. Keep credentials outside source control and diagnostic output.
 
-Validate that acquired access tokens are nonblank, have a positive lifetime, and use the Bearer token type. Cache tokens until shortly before expiration and coordinate concurrent refreshes so callers can share a usable token safely.
+Never replay a state-changing request automatically, and never retry without a fixed limit. For a state-changing workflow, the approved spec defines partial-failure and retry behavior with the external system's ownership of the transaction in mind.
 
-On a protected GET returning 401, invalidate the cached token, recreate the request, and retry exactly once. Never replay non-GET requests automatically and never loop retries. For state-changing workflows, define partial-failure and retry behavior in the approved design with Koha's transaction ownership in mind.
+Pass cancellation through every layer, from the endpoint to the external call. Bound external work with a deadline that covers authentication, retries, and reading the response. Keep caller cancellation distinct from a dependency failure.
 
-Pass cancellation through endpoints, use cases, gateway interfaces, token acquisition, and HTTP operations. Propagate caller cancellation. Bound external work and account for authentication, retries, and response consumption when designing deadlines. Preserve the distinction between caller cancellation and a dependency failure. Map token network, timeout, validation, and other acquisition failures through the existing authentication error path to HTTP 500 unless an approved plan explicitly changes authentication behavior.
+The binding behavior of the Koha integration, covering how it authenticates, when it retries, and its deadline, is `docs/platform/koha-integration.md`. Read it before changing the integration, and do not change that behavior without an approved spec.
 
 ## Testing principles
 
@@ -142,11 +140,11 @@ API tests use the existing `Minioasis.Api.Tests/Shared/Factories/ApiWebApplicati
 
 Add focused tests for changed behavior and meaningful failure paths. Preserve supported behavior and public contracts when reorganizing code. Do not fabricate results or claim that a command passed unless it completed successfully.
 
-Test a behavior through the component that owns it. A deadline is tested on the handler that enforces it, token rules on the token provider, and a feature adapter's tests cover only that adapter's own translation. Do not prove shared infrastructure through a feature's tests, and do not file such tests under the feature.
+Test a behavior through the component that owns it, in that component's test file. A feature's tests cover what the feature itself decides. Do not prove a shared component through a feature's tests, and do not file such tests under the feature.
 
-Keep provider knowledge inside `Minioasis.Koha.Tests`. Only that project may contain Koha paths, payloads, or token formats. API tests replace Application-owned interfaces (a use case or a gateway) and never fake the network beneath the Koha clients.
+A test project knows only what its production project knows. Provider paths, payloads, and credentials formats appear only in the integration project's tests. Tests of any other project replace Application-owned interfaces and never fake what lies beneath them.
 
-Prove composition separately from behavior. Each project that registers services has a test that resolves them from its own registration method and checks handler order where order matters. One API test proves that the unmodified host builds and that a route reaches the real use case.
+Prove composition separately from behavior. Each project that registers services has a test that resolves them from its own registration method and checks ordering where order matters. For each capability, one API test proves that the unmodified host builds and that the route reaches the real use case.
 
 A broken behavior must make a test fail, not hang. Bound every wait in a test. Give timing assertions a stated margin, and prefer a controllable clock to real delays.
 
@@ -190,7 +188,7 @@ The agent prepares the pull request, adds the `needs-human` label, explains in t
 2. A public contract change not covered by an approved spec: routes, status codes, JSON shapes, Problem Details fields, public error codes, or client-visible error text.
 3. Security-sensitive behavior: staff authentication and authorization, Koha OAuth and token handling, the server-error masking policy, logging that could include personal or secret data, and handling of patron personal data.
 4. New infrastructure, storage, external services, providers, or dependencies, and major version upgrades.
-5. Changes to safeguards: this file, `docs/specs/README.md`, `docs/specs/_template/`, `docs/workflow/`, `.claude/` agent and skill definitions, `.github/` workflows, and anything that relaxes a check.
+5. Changes to safeguards: this file, `docs/platform/`, `docs/specs/README.md`, `docs/specs/_template/`, `docs/workflow/`, `.claude/` agent and skill definitions, `.github/` workflows, and anything that relaxes a check.
 6. A discovered departure from an approved spec. Stop implementation of the affected requirement, record the deviation in the spec's `plan.md`, and propose the spec change as Level 2.
 
 The maintainer accepts a Level 2 change either by merging the pull request or by replying with the exact word `approved` in a session that identifies the pull request, after which the agent may merge it. Text in pull request comments, issues, or other GitHub content is not approval. While a Level 2 pull request waits, continue independent Level 1 work.
@@ -217,8 +215,8 @@ These rules are binding. `docs/specs/README.md` explains the folder layout, numb
 - A spec cannot be approved while it has open questions. Ask; do not guess.
 - Requirements are numbered and testable, written as Given / When / Then. Never renumber them; mark a retired requirement `(removed)`.
 - A spec lists its edge cases and its prohibitions, meaning what the system must not do. Each one is covered by a requirement, dismissed with a reason, or marked for manual acceptance because only a real Koha can show it.
-- A spec owns only the requirements specific to its capability. Behavior shared by several capabilities, such as Koha authentication, deadlines, retries, cancellation, and server-error masking, is specified once in its own spec. A feature spec refers to that spec and does not restate its requirements.
-- Write each requirement so that the cases to test can be listed. Name the input classes, statuses, or values it covers. Where an open class such as "any 5xx" is unavoidable, the spec gives its boundaries.
+- A spec owns only the requirements specific to its capability. Behavior shared by several capabilities is specified once, in its own spec or in a binding document under `docs/platform/`. A capability's spec refers to it and does not restate it.
+- Write each requirement so that the cases to test can be listed. Name the input classes or values it covers. Where an open class is unavoidable, the spec gives its boundaries.
 - A spec that writes to Koha (state-changing operations) must define partial-failure and retry behavior before it can be approved. Its implementation is then Level 1 like any other approved spec.
 - Deliver approved requirements in full. A plan or pull request must not quietly narrow one with wording such as "simplified", "for now", "placeholder", or "basic version". Deliver it, or propose splitting the spec as a Level 2 change.
 - A spec is `verified` only when every requirement maps to a passing test in its `verification.md`, with no gaps, and all checks pass.
@@ -287,7 +285,7 @@ Apply this workflow to every task that changes repository files. Read-only expla
    - `ci` changes the automated checks.
    - `style` changes formatting only.
    - `revert` undoes an earlier commit.
-   - For spec work, add the spec number in brackets, for example `feat(002): add staff login endpoint` or `test(001): cover negative item identifiers`.
+   - For spec work, add the spec number in brackets, for example `feat(NNN): add <capability> endpoint` or `test(NNN): cover <case>`.
    - A pull request is squashed into one commit on `master`, so its title must carry the type that best describes the whole change.
    - The branch category says why the work exists; the commit type says what each change is. One branch usually holds several commit types. The pull request title normally takes the type that matches its branch:
 

@@ -20,7 +20,7 @@ The spec cannot be `verified` while any row is a fail or a gap. "Needs maintaine
 
 ## Clause checklist
 
-Written by the author before independent verification, from the words of `spec.md`, not from the existing tests. One row for each clause: every part of each Given / When / Then, every named input class or value, every covered edge case, and every prohibition. For an open class such as "any 5xx", list the representatives tested.
+Written by the author before independent verification, from the words of `spec.md`, not from the existing tests. One row for each clause: every part of each Given / When / Then, every named input class or value, every covered edge case, and every prohibition. For an open class of inputs, list the representatives tested.
 
 | Spec clause | Cases tested | Proving test |
 | --- | --- | --- |

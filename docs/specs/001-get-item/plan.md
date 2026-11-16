@@ -47,7 +47,7 @@ The API HTTP client runs two handlers:
 
 - `contracts/items.openapi.json` is derived from `getItem` in the official contract.
 - `contracts/oauth.openapi.json` covers the token endpoint.
-- Both are generated with the NSwag commands in `AGENTS.md`.
+- Both are generated with the NSwag command in `docs/platform/koha-integration.md`.
 
 ## Error definitions
 
