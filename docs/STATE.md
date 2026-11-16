@@ -4,15 +4,15 @@ A snapshot of where the work stands. Agents overwrite this file in the pull requ
 
 This file holds only what GitHub and Git cannot show. Work in progress is the list of open pull requests, and the maintainer's queue is the open pull requests labelled `needs-human`.
 
-**Last updated:** 2026-11-15
+**Last updated:** 2026-11-16
 
 ## Current spec
 
-- **001 Get item:** `approved`. All test gaps are closed. Before it is verified, "Seen failing" must be recorded for the older tests and an independent agent must verify it; see `docs/specs/001-get-item/verification.md`.
+- **001 Get item:** `verified` on 2026-11-16. Pull request #12 (labelled `needs-human`) carries the verification and waits for the maintainer's acceptance. See `docs/specs/001-get-item/verification.md`.
 
 ## Next
 
-- Record "Seen failing" for the remaining 001 tests, have it verified independently, and create `ready/001-get-item`.
+- Maintainer accepts pull request #12; then `ready/001-get-item` is created at the merge commit.
 - Draft spec 002 (staff authentication design) for the maintainer.
 
 ## Recent decisions

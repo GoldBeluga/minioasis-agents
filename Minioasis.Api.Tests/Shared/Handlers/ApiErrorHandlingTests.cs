@@ -79,7 +79,8 @@ public sealed class ApiErrorHandlingTests
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => request);
         await cancelled.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
-        Assert.DoesNotContain(logs.Entries, entry => entry.Message.Contains("Unhandled API failure", StringComparison.Ordinal)
+        Assert.DoesNotContain(logs.Entries, entry => entry.Level >= LogLevel.Error
+            || entry.Message.Contains("Unhandled API failure", StringComparison.Ordinal)
             || entry.Message.Contains("Application failure", StringComparison.Ordinal));
     }
 

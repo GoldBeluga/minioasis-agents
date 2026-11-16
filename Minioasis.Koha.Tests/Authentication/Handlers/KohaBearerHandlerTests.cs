@@ -66,18 +66,26 @@ public sealed class KohaBearerHandlerTests
         Assert.Equal(2, tokens.GetCalls);
     }
 
-    [Fact]
-    public async Task Does_not_retry_non_get_request()
+    [Theory]
+    [InlineData("POST")]
+    [InlineData("PUT")]
+    [InlineData("PATCH")]
+    [InlineData("DELETE")]
+    [InlineData("HEAD")]
+    [InlineData("OPTIONS")]
+    public async Task Does_not_retry_non_get_request(string method)
     {
         var inner = new StubHttpMessageHandler((_, _) =>
             Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized)));
         var tokens = new SequenceKohaAccessTokenProvider("token-1", "token-2");
         using var client = CreateClient(tokens, inner);
 
-        using var response = await client.PostAsync(
-            "https://koha.test/api/v1/items",
-            new StringContent("{}"),
-            TestContext.Current.CancellationToken);
+        using var request = new HttpRequestMessage(new HttpMethod(method), "https://koha.test/api/v1/items/12")
+        {
+            Content = new StringContent("{}")
+        };
+
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal(1, inner.Calls);

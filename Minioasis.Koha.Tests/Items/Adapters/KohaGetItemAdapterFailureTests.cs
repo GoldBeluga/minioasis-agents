@@ -25,9 +25,9 @@ public sealed class KohaGetItemAdapterFailureTests
             (_, _) => throw new InvalidOperationException("Item request should not be sent."),
             TimeSpan.FromMilliseconds(100));
 
-        var result = await harness.Gateway.GetItemAsync(
-            new ItemId("12"),
-            TestContext.Current.CancellationToken);
+        var result = await harness.Gateway
+            .GetItemAsync(new ItemId("12"), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         Assert.Equal(GetItemOutcome.AuthenticationFailed, result.Outcome);
     }
@@ -40,7 +40,9 @@ public sealed class KohaGetItemAdapterFailureTests
             (_, _) => throw new InvalidOperationException("Item request should not be sent."),
             TimeSpan.FromSeconds(5));
         using var cancellation = new CancellationTokenSource();
-        var pending = harness.Gateway.GetItemAsync(new ItemId("12"), cancellation.Token);
+        var pending = harness.Gateway
+            .GetItemAsync(new ItemId("12"), cancellation.Token)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         cancellation.Cancel();
 
@@ -64,13 +66,67 @@ public sealed class KohaGetItemAdapterFailureTests
             TimeSpan.FromMilliseconds(500));
         var elapsed = Stopwatch.StartNew();
 
-        var result = await harness.Gateway.GetItemAsync(
-            new ItemId("12"),
-            TestContext.Current.CancellationToken);
+        var result = await harness.Gateway
+            .GetItemAsync(new ItemId("12"), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         elapsed.Stop();
         Assert.Equal(GetItemOutcome.Unavailable, result.Outcome);
         Assert.True(elapsed.Elapsed < TimeSpan.FromMilliseconds(700), $"Elapsed: {elapsed.Elapsed}");
+    }
+
+    [Fact]
+    public async Task Deadline_is_applied_as_configured()
+    {
+        using var harness = new GetItemAdapterHarness(
+            (_, _) => Task.FromResult(Token()),
+            (_, cancellationToken) => WaitForever(cancellationToken),
+            TimeSpan.FromSeconds(2));
+        var elapsed = Stopwatch.StartNew();
+
+        var result = await harness.Gateway
+            .GetItemAsync(new ItemId("12"), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        elapsed.Stop();
+        Assert.Equal(GetItemOutcome.Unavailable, result.Outcome);
+        Assert.InRange(elapsed.Elapsed, TimeSpan.FromSeconds(1.9), TimeSpan.FromSeconds(2.4));
+    }
+
+    [Fact]
+    public async Task Unanswered_item_request_is_unavailable_at_the_deadline()
+    {
+        using var harness = new GetItemAdapterHarness(
+            (_, _) => Task.FromResult(Token()),
+            (_, cancellationToken) => WaitForever(cancellationToken),
+            TimeSpan.FromMilliseconds(300));
+
+        var result = await harness.Gateway
+            .GetItemAsync(new ItemId("12"), TestContext.Current.CancellationToken)
+            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        Assert.Equal(GetItemOutcome.Unavailable, result.Outcome);
+    }
+
+    [Fact]
+    public async Task Caller_cancellation_during_item_request_is_propagated()
+    {
+        var itemRequested = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var harness = new GetItemAdapterHarness(
+            (_, _) => Task.FromResult(Token()),
+            (_, cancellationToken) =>
+            {
+                itemRequested.SetResult();
+                return WaitForever(cancellationToken);
+            });
+        using var cancellation = new CancellationTokenSource();
+        var pending = harness.Gateway.GetItemAsync(new ItemId("12"), cancellation.Token);
+        await itemRequested.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        cancellation.Cancel();
+
+        var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => pending);
+        Assert.Equal(cancellation.Token, exception.CancellationToken);
     }
 
     [Fact]

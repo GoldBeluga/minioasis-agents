@@ -43,6 +43,10 @@ public sealed class KohaGetItemAdapterTests
     [InlineData("0")]
     [InlineData("-5")]
     [InlineData("2147483648")]
+    [InlineData("4294967308")]
+    [InlineData("12.5")]
+    [InlineData("1,000")]
+    [InlineData("1e3")]
     public async Task Rejects_non_positive_or_out_of_range_identifier_without_network(string identifier)
     {
         var handler = new StubHttpMessageHandler((_, _) => throw new InvalidOperationException());
@@ -90,8 +94,16 @@ public sealed class KohaGetItemAdapterTests
     [InlineData(HttpStatusCode.Unauthorized, GetItemOutcome.AuthenticationFailed)]
     [InlineData(HttpStatusCode.Forbidden, GetItemOutcome.AuthenticationFailed)]
     [InlineData(HttpStatusCode.TooManyRequests, GetItemOutcome.Unavailable)]
+    [InlineData(HttpStatusCode.InternalServerError, GetItemOutcome.Unavailable)]
     [InlineData(HttpStatusCode.BadGateway, GetItemOutcome.Unavailable)]
+    [InlineData(HttpStatusCode.ServiceUnavailable, GetItemOutcome.Unavailable)]
+    [InlineData(HttpStatusCode.GatewayTimeout, GetItemOutcome.Unavailable)]
+    [InlineData((HttpStatusCode)599, GetItemOutcome.Unavailable)]
     [InlineData(HttpStatusCode.BadRequest, GetItemOutcome.InvalidResponse)]
+    [InlineData(HttpStatusCode.MethodNotAllowed, GetItemOutcome.InvalidResponse)]
+    [InlineData(HttpStatusCode.Conflict, GetItemOutcome.InvalidResponse)]
+    [InlineData(HttpStatusCode.Gone, GetItemOutcome.InvalidResponse)]
+    [InlineData(HttpStatusCode.UnprocessableEntity, GetItemOutcome.InvalidResponse)]
     public async Task Translates_item_http_failures(
         HttpStatusCode status,
         GetItemOutcome expected)
@@ -102,6 +114,33 @@ public sealed class KohaGetItemAdapterTests
             TestContext.Current.CancellationToken);
 
         Assert.Equal(expected, result.Outcome);
+    }
+
+    [Fact]
+    public async Task Connection_failure_is_unavailable()
+    {
+        var handler = new StubHttpMessageHandler((_, _) =>
+            Task.FromException<HttpResponseMessage>(new HttpRequestException("Connection refused")));
+        var result = await Adapter(handler).GetItemAsync(
+            new ItemId("12"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(GetItemOutcome.Unavailable, result.Outcome);
+    }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("{")]
+    public async Task Unusable_success_body_is_an_invalid_response(string body)
+    {
+        var handler = new StubHttpMessageHandler((_, _) => HttpResponseMessageFactory.CreateJsonAsync(
+            HttpStatusCode.OK,
+            body));
+        var result = await Adapter(handler).GetItemAsync(
+            new ItemId("12"),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(GetItemOutcome.InvalidResponse, result.Outcome);
     }
 
     [Fact]
