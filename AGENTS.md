@@ -81,6 +81,21 @@ Use braces around control-flow statement bodies in handwritten production code a
 
 Test folders mirror production feature and role organization. Place feature-specific reusable doubles under `<Feature>/TestDoubles` and cross-feature doubles under `Shared/TestDoubles`. Apply these conventions to new handwritten code. Migrate existing names and layouts through explicitly approved work, keeping references, namespaces, tests, and discovery behavior consistent.
 
+## Code design
+
+Organization says where code lives. This section says how it is written. Write each component so that a reader can state its single responsibility in one sentence and can find every rule in exactly one place.
+
+- **One responsibility per type and per method.** Keep validating input, calling an external system, and translating the outcome in separate methods or types. A method that does several of these is split.
+- **One home for each rule.** Validate an input completely at one boundary. Input rules that a spec states, such as format and range, belong to Application: in the value object or the use case. A gateway receives valid Application-owned values and never reports invalid caller input back to Application.
+- **Typed identifiers and value objects validate when they are created,** so an invalid one cannot exist. Code that receives one does not check it again.
+- **Components do not steer each other with private exceptions.** A component does not throw an exception type for a sibling to catch and convert, and does not catch a sibling's internal exception types. Report expected outcomes through return values, or through one documented exception type per failure kind that the boundary owns.
+- **Translate failures once per boundary.** Each adapter maps provider failures to Application outcomes in one clearly named place, in a stated order, so the mapping can be read as a table.
+- **One path per concern.** Each cross-cutting behavior, such as turning an unhandled exception into a response, enforcing a deadline, or attaching a token, has one implementation and one registration.
+- **No unreachable code.** Every branch and every `catch` must be reachable in the composed application and have a test that reaches it. Remove handling for failures that cannot arrive. If a failure arrives in a different form than the code expects, fix the code, not only the test.
+- **No speculative structure.** Add an abstraction, option, or extension point when a second real use needs it.
+
+Apply these rules to new handwritten code. Bring existing code into line through explicitly approved work, as for naming and layout.
+
 ## Results and error reporting
 
 Application owns stable typed error definitions and the meaning of use-case outcomes. API owns presentation and HTTP status mapping. Translate recognized provider failures at the gateway boundary, then let the use case select the Application result. Return expected unsuccessful outcomes explicitly so callers can handle them consistently. Distinguish actionable application outcomes from failures the user cannot resolve. Explain invalid input, missing records, and expected workflow restrictions sufficiently for the client to guide the user. Preserve stable public error codes for these outcomes; clients should use codes rather than matching English messages.
@@ -126,6 +141,18 @@ Test behavior at its owning boundary. Application tests exercise business rules 
 API tests use the existing `Minioasis.Api.Tests/Shared/Factories/ApiWebApplicationFactory.cs`, which supplies dummy Koha configuration and supports test service overrides. Keep host configuration isolated and do not mutate process-wide environment variables in tests. Follow the feature-first organization when adding test support or performing an approved migration.
 
 Add focused tests for changed behavior and meaningful failure paths. Preserve supported behavior and public contracts when reorganizing code. Do not fabricate results or claim that a command passed unless it completed successfully.
+
+Test a behavior through the component that owns it. A deadline is tested on the handler that enforces it, token rules on the token provider, and a feature adapter's tests cover only that adapter's own translation. Do not prove shared infrastructure through a feature's tests, and do not file such tests under the feature.
+
+Keep provider knowledge inside `Minioasis.Koha.Tests`. Only that project may contain Koha paths, payloads, or token formats. API tests replace Application-owned interfaces (a use case or a gateway) and never fake the network beneath the Koha clients.
+
+Prove composition separately from behavior. Each project that registers services has a test that resolves them from its own registration method and checks handler order where order matters. One API test proves that the unmodified host builds and that a route reaches the real use case.
+
+A broken behavior must make a test fail, not hang. Bound every wait in a test. Give timing assertions a stated margin, and prefer a controllable clock to real delays.
+
+Cover what the requirement's words cover. Where a requirement names a class of inputs or uses "any", "every", "all", or "never", test each named class and at least three distinct representatives of an open class, including its boundaries. Assert outcomes and behavior, not log wording, unless a spec fixes the text.
+
+Reusable test harnesses live under `TestDoubles` as their own types, not as nested classes inside a test class.
 
 ## Repository boundary
 
@@ -190,6 +217,8 @@ These rules are binding. `docs/specs/README.md` explains the folder layout, numb
 - A spec cannot be approved while it has open questions. Ask; do not guess.
 - Requirements are numbered and testable, written as Given / When / Then. Never renumber them; mark a retired requirement `(removed)`.
 - A spec lists its edge cases and its prohibitions, meaning what the system must not do. Each one is covered by a requirement, dismissed with a reason, or marked for manual acceptance because only a real Koha can show it.
+- A spec owns only the requirements specific to its capability. Behavior shared by several capabilities, such as Koha authentication, deadlines, retries, cancellation, and server-error masking, is specified once in its own spec. A feature spec refers to that spec and does not restate its requirements.
+- Write each requirement so that the cases to test can be listed. Name the input classes, statuses, or values it covers. Where an open class such as "any 5xx" is unavoidable, the spec gives its boundaries.
 - A spec that writes to Koha (state-changing operations) must define partial-failure and retry behavior before it can be approved. Its implementation is then Level 1 like any other approved spec.
 - Deliver approved requirements in full. A plan or pull request must not quietly narrow one with wording such as "simplified", "for now", "placeholder", or "basic version". Deliver it, or propose splitting the spec as a Level 2 change.
 - A spec is `verified` only when every requirement maps to a passing test in its `verification.md`, with no gaps, and all checks pass.
@@ -216,6 +245,9 @@ These rules are binding. `docs/specs/README.md` explains the folder layout, numb
 - Verify the goal, not the task list. For each requirement, confirm that the behavior exists, is real and not a placeholder, and is wired in: registered for dependency injection and reachable from its endpoint.
 - A test proves a requirement only if it would fail when the behavior is broken. Record in `verification.md` how each test was seen to fail.
 - Verification and code review are done by an agent that did not write the code, working from the spec and the code, not from the author's explanation.
+- The bar for `verified` is fixed: every explicit Given / When / Then, every covered edge case, and every prohibition in the spec has a test that fails when that stated behavior is directly broken. The verifier reports a blocking finding only against this bar. Anything else it finds, such as a contrived change no test catches or a test-quality concern, is non-blocking and is recorded for follow-up.
+- Before independent verification, the author writes the clause checklist in `verification.md`: one row per clause of the spec, including each named input class, with the test that proves it. A clause without a test is a gap, and the author closes it before asking for verification.
+- Code review checks the Code design and Testing principles sections, not only behavior. A violation is a blocking finding.
 - Never report a pass for something the tests cannot show, such as how a real Koha behaves or a case the spec does not decide. Mark it "needs maintainer" and add it to manual acceptance. A confident guess recorded as a pass breaks these rules.
 - Stop a review-and-fix loop after three rounds, or sooner if a round does not reduce the blocking findings. Label the pull request `needs-human` and list what remains.
 
